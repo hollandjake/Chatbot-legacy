@@ -1,5 +1,5 @@
 package bot.utils;
 
 public interface Module {
-    void process(WebController webController, Message message);
+    boolean process(WebController webController, Message message);
 }

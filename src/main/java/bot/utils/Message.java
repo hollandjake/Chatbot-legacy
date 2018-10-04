@@ -1,5 +1,6 @@
 package bot.utils;
 
+import org.json.simple.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
@@ -7,7 +8,9 @@ import org.openqa.selenium.WebElement;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
+import java.util.Date;
 
+import static bot.utils.CONSTANTS.DATE_FORMATTER;
 import static bot.utils.CONSTANTS.PASTE;
 import static bot.utils.XPATHS.MESSAGE_TEXT;
 
@@ -57,5 +60,14 @@ public class Message {
 
     public String toString() {
         return sender != null ? (sender + " : " + message) : message;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject me = new JSONObject();
+        me.put("sender", sender.toJSON());
+        me.put("message", message);
+        me.put("timestamp", DATE_FORMATTER.format(new Date()));
+
+        return me;
     }
 }

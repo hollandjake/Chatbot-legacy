@@ -2,20 +2,16 @@ package bot.dogbot;
 
 import bot.Chatbot;
 import bot.dogbot.modules.Quotes;
-import bot.utils.Module;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class Dogbot extends Chatbot {
 
     @Override
-    protected ArrayList<Module> getModules() {
-        return new ArrayList<>(List.of(
-                new Quotes()
-        ));
+    protected void loadModules() {
+        modules.add(new Quotes());
     }
+
 
     public Dogbot(String username, String password, String threadId, boolean debugMode) {
         super(username, password, threadId, debugMode);

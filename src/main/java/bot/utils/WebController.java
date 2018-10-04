@@ -17,11 +17,12 @@ import java.util.ArrayList;
 import static bot.utils.XPATHS.*;
 
 public class WebController {
-    private ChromeDriverService service;
-    private WebDriver webDriver;
-    private Actions keyboard;
-    private WebDriverWait wait;
-    private WebDriverWait messageWait;
+    private Human me;
+    private final ChromeDriverService service;
+    private final WebDriver webDriver;
+    private final Actions keyboard;
+    private final WebDriverWait wait;
+    private final WebDriverWait messageWait;
 
     public WebController(int messageTimeout) {
         ClassLoader classLoader = getClass().getClassLoader();
@@ -65,10 +66,15 @@ public class WebController {
 
     public void gotoFacebookThread(String threadId) {
         webDriver.get("https://www.messenger.com/t/" + threadId);
+        me = Human.createForBot(getMyUserId());
     }
 
     public WebElement getMyUserId() {
         return webDriver.findElement(By.xpath(MY_USER_ID));
+    }
+
+    public void sendMessage(String message) {
+        new Message(me, message).sendMessage(selectInputBox());
     }
 
     public void sendMessage(Message message) {

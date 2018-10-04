@@ -25,12 +25,9 @@ public class Chatbot {
     private boolean running = true;
     private String threadId;
 
-    private Human me;
-    private Message initMessage;
+    private String initMessage = "Chatbot is online";
 
-    protected ArrayList<Module> getModules() {
-        return new ArrayList<>();
-    }
+    protected final ArrayList<Module> modules = new ArrayList<>();
 
     public Chatbot(String username, String password, String threadId, boolean debugMode) {
         run(username, password, threadId, debugMode);
@@ -46,6 +43,9 @@ public class Chatbot {
 
     public Chatbot() {
         runFromConfig("config", false);
+    }
+
+    protected void loadModules() {
     }
 
     private void runFromConfig(String configName, boolean debugMode) {
@@ -68,18 +68,16 @@ public class Chatbot {
         System.out.println("Shutdown code: " + shutdownCode);
 
         this.threadId = threadId;
+        loadModules();
 
         //Run setup
         webController.login(username, password);
         webController.gotoFacebookThread(threadId);
 
-        this.me = Human.createForBot(webController.getMyUserId());
-
         //Wait until messages have loaded
         webController.waitForMessagesToLoad();
 
         //Init message
-        this.initMessage = new Message(me, "Chatbot is online");
         if (!debugMode) {
             webController.sendMessage(initMessage);
         }
@@ -92,7 +90,7 @@ public class Chatbot {
                     System.out.println(newMessage);
                 }
                 //Handle options
-                for (Module module : getModules()) {
+                for (Module module : modules) {
                     module.process(webController, newMessage);
                 }
 

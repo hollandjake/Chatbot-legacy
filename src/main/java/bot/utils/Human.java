@@ -1,5 +1,6 @@
 package bot.utils;
 
+import org.json.simple.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
@@ -66,5 +67,14 @@ public class Human {
         String userId = matcher.find() ? matcher.group(1) : null;
 
         return new Human(userId);
+    }
+
+    public JSONObject toJSON() {
+        JSONObject me = new JSONObject();
+        me.put("name", name);
+        me.put("nickname", nickname);
+        me.put("USER_ID", userId);
+
+        return me;
     }
 }
