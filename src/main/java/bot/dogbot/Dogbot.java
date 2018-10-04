@@ -1,7 +1,7 @@
 package bot.dogbot;
 
 import bot.Chatbot;
-import bot.dogbot.modules.Quotes;
+import bot.dogbot.modules.Quote;
 
 import java.util.Arrays;
 
@@ -9,9 +9,8 @@ public class Dogbot extends Chatbot {
 
     @Override
     protected void loadModules() {
-        modules.add(new Quotes());
+        modules.add(new Quote(messageLog));
     }
-
 
     public Dogbot(String username, String password, String threadId, boolean debugMode) {
         super(username, password, threadId, debugMode);

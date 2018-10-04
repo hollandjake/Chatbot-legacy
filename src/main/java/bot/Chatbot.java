@@ -5,6 +5,7 @@ import bot.utils.Message;
 import bot.utils.Module;
 import bot.utils.WebController;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
@@ -18,7 +19,7 @@ public class Chatbot {
     private final String shutdownCode = Integer.toString(new Random().nextInt(99999));
     private final Date startTime = new Date();
 
-    private final int messageTimeout = 60;
+    private final Duration messageTimeout = Duration.ofMinutes(1);
     private final WebController webController = new WebController(messageTimeout);
 
     //Variables
@@ -46,6 +47,14 @@ public class Chatbot {
     }
 
     protected void loadModules() {
+    }
+
+    public void sendMessage(String message) {
+        webController.sendMessage(message);
+    }
+
+    public void sendMessage(Message message) {
+        webController.sendMessage(message);
     }
 
     private void runFromConfig(String configName, boolean debugMode) {
@@ -86,15 +95,17 @@ public class Chatbot {
             try {
                 webController.waitForNewMessage();
                 Message newMessage = webController.getLatestMessage(people);
+                messageLog.add(newMessage);
+
                 if (debugMode) {
                     System.out.println(newMessage);
                 }
+
                 //Handle options
                 for (Module module : modules) {
-                    module.process(webController, newMessage);
+                    module.process(this, newMessage);
                 }
 
-//                webController.sendMessage(newMessage);
             } catch (org.openqa.selenium.TimeoutException e) {
                 if (debugMode) {
                     System.out.println("No messaged received in the last " + messageTimeout + "s");

@@ -18,10 +18,11 @@ public interface XPATHS {
     String MY_USER_ID = "//script[starts-with(text(),'requireLazy([\"ix\"],function(ix){ix.add({\"496757\"')]";
 
     //Messages
-    String MESSAGES = "//div[contains(@class,'_o46')]";
-    String MESSAGES_OTHERS = "//div[contains(@class,'_29_7')]";
+    String MESSAGES = "//div[div/div[contains(@class,'ui9')]]";
+    String MESSAGES_ALL = MESSAGES + "/div[contains(@class,'_o46')]";
+    String MESSAGES_OTHERS = MESSAGES + "/div[contains(@class,'_29_7')]";
     String MESSAGES_OTHERS_RECENT = "(" + MESSAGES_OTHERS + ")[last()]";
-    String MESSAGES_MINE = "//div[contains(@class,'_nd_')]";
+    String MESSAGES_MINE = MESSAGES + "/div[contains(@class,'_nd_')]";
     String MESSAGES_MINE_RECENT = "(" + MESSAGES_MINE + ")[last()]";
 
 
@@ -39,7 +40,7 @@ public interface XPATHS {
      * REQUIRES <strong>MESSAGE ELEMENT</strong>
      * <br><br>RETURNS -> @<strong>data-tooltip-content</strong>
      */
-    String MESSAGE_SENDER_REAL_NAME = "./../../div/a/div[@data-tooltip-content]";
+    String MESSAGE_SENDER_REAL_NAME = "./../../div/*/div[@data-tooltip-content]";
     /**
      * REQUIRES <strong>MESSAGE ELEMENT</strong>
      * <br><br>RETURNS -> @<strong>participants</strong>

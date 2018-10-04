@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 
 import static bot.utils.XPATHS.*;
@@ -24,7 +25,7 @@ public class WebController {
     private final WebDriverWait wait;
     private final WebDriverWait messageWait;
 
-    public WebController(int messageTimeout) {
+    public WebController(Duration messageTimeout) {
         ClassLoader classLoader = getClass().getClassLoader();
         File driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
                 new File(classLoader.getResource("drivers/windows/chromedriver.exe").getFile()) :
@@ -44,7 +45,7 @@ public class WebController {
         keyboard = new Actions(webDriver);
 
         wait = new WebDriverWait(webDriver, 5);
-        messageWait = new WebDriverWait(webDriver, messageTimeout);
+        messageWait = new WebDriverWait(webDriver, messageTimeout.getSeconds());
     }
 
     public void quit() {

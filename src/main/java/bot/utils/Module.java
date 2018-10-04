@@ -1,5 +1,7 @@
 package bot.utils;
 
+import bot.Chatbot;
+
 public interface Module {
-    boolean process(WebController webController, Message message);
+    boolean process(Chatbot chatbot, Message message);
 }

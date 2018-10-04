@@ -41,7 +41,7 @@ public class Human {
     }
 
     public String toString() {
-        return "[" + getClass().getName() + '@' + Integer.toHexString(hashCode()) + "]" + nickname + " [" + userId + "]";
+        return "[" + userId + "] " + name + (nickname != null ? "(" + nickname + ")" : "");
     }
 
     public static Human getFromElement(WebElement webElement, ArrayList<Human> people) {

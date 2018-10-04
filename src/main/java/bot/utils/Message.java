@@ -17,6 +17,7 @@ import static bot.utils.XPATHS.MESSAGE_TEXT;
 public class Message {
     private final Human sender;
     private final String message;
+    private final Date date = new Date();
 
     public Message(Human me, String message) {
         this.sender = me; //Sender is the bot
@@ -66,7 +67,7 @@ public class Message {
         JSONObject me = new JSONObject();
         me.put("sender", sender.toJSON());
         me.put("message", message);
-        me.put("timestamp", DATE_FORMATTER.format(new Date()));
+        me.put("timestamp", DATE_FORMATTER.format(date));
 
         return me;
     }
