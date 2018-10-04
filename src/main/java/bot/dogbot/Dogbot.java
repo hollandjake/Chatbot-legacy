@@ -1,31 +1,53 @@
 package bot.dogbot;
 
 import bot.Chatbot;
+import bot.dogbot.modules.Quotes;
+import bot.utils.Module;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Dogbot extends Chatbot {
 
-    public Dogbot(String username, String password, String threadId) {
+    @Override
+    protected ArrayList<Module> getModules() {
+        return new ArrayList<>(List.of(
+                new Quotes()
+        ));
     }
 
-    public Dogbot(String configName, String threadId) {
+    public Dogbot(String username, String password, String threadId, boolean debugMode) {
+        super(username, password, threadId, debugMode);
     }
 
-    public Dogbot(String configName) {
+    public Dogbot(String configName, String threadId, boolean debugMode) {
+        super(configName, threadId, debugMode);
     }
 
-    public Dogbot() {
+    public Dogbot(String configName, boolean debugMode) {
+        super(configName, debugMode);
     }
 
     public static void main(String[] args) {
         Chatbot bot;
 
-        String configName = null;
+        String configName = "config";
         String threadId = null;
 
-        for (int i = 0; i < args.length - 1; i++) {
-            //Skip last one since this is only checking for modifiers
-            String[] subArgs = args[i].split("=");
+        String username = null;
+        String password = null;
 
+        boolean debugMode = false;
+
+        for (int i = 0; i < args.length; i++) {
+            //Remove any extra quotes someone may have added
+            String[] subArgs = Arrays
+                    .stream(args[i].split("="))
+                    .map(subArg -> subArg.replace("\"", ""))
+                    .toArray(String[]::new);
+
+            //Check for condtions
             switch (subArgs[0]) {
                 case "config":
                     configName = subArgs[1];
@@ -34,17 +56,28 @@ public class Dogbot extends Chatbot {
                 case "threadid":
                     threadId = subArgs[1];
                     break;
+                case "pass":
+                    password = subArgs[1];
+                    break;
+                case "user":
+                    username = subArgs[1];
+                    break;
+                case "-debug":
+                case "-d":
+                    debugMode = true;
+                    break;
             }
         }
 
-        if (configName != null) {
-            if (threadId != null) {
-                bot = new Dogbot(configName, threadId);
-            } else {
-                bot = new Dogbot(configName);
-            }
+        //Create bot
+        if (username != null && password != null && threadId != null) {
+            bot = new Dogbot(username, password, threadId, debugMode);
         } else {
-            bot = new Dogbot();
+            if (threadId != null) {
+                bot = new Dogbot(configName, threadId, debugMode);
+            } else {
+                bot = new Dogbot(configName, debugMode);
+            }
         }
     }
 }

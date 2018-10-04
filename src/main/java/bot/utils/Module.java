@@ -1,5 +1,5 @@
 package bot.utils;
 
 public interface Module {
-    void handleMessage(String message);
+    void process(WebController webController, Message message);
 }

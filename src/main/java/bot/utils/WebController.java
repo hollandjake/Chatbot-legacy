@@ -1,7 +1,6 @@
 package bot.utils;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriverService;
@@ -11,10 +10,11 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+
+import static bot.utils.XPATHS.*;
 
 public class WebController {
     private ChromeDriverService service;
@@ -23,7 +23,7 @@ public class WebController {
     private WebDriverWait wait;
     private WebDriverWait messageWait;
 
-    public WebController() {
+    public WebController(int messageTimeout) {
         ClassLoader classLoader = getClass().getClassLoader();
         File driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
                 new File(classLoader.getResource("drivers/windows/chromedriver.exe").getFile()) :
@@ -43,7 +43,7 @@ public class WebController {
         keyboard = new Actions(webDriver);
 
         wait = new WebDriverWait(webDriver, 5);
-        messageWait = new WebDriverWait(webDriver, 1);
+        messageWait = new WebDriverWait(webDriver, messageTimeout);
     }
 
     public void quit() {
@@ -51,57 +51,55 @@ public class WebController {
     }
 
     public void login(String username, String password) {
-        final String emailBox = "//input[@id='email']";
-        final String passBox = "//input[@id='pass']";
-        final String loginButton = "//button[@id='loginbutton']";
 
         //Goto page
         webDriver.get("https://www.messenger.com");
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(emailBox)));
-        webDriver.findElement(By.xpath(emailBox)).sendKeys(username);
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(passBox)));
-        webDriver.findElement(By.xpath(passBox)).sendKeys(password);
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(loginButton)));
-        webDriver.findElement(By.xpath(loginButton)).click();
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(LOGIN_EMAIL)));
+        webDriver.findElement(By.xpath(LOGIN_EMAIL)).sendKeys(username);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(LOGIN_PASS)));
+        webDriver.findElement(By.xpath(LOGIN_PASS)).sendKeys(password);
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_BUTTON)));
+        webDriver.findElement(By.xpath(LOGIN_BUTTON)).click();
     }
 
     public void gotoFacebookThread(String threadId) {
         webDriver.get("https://www.messenger.com/t/" + threadId);
     }
 
-    public void sendMessage(String message) {
-        WebElement inputBox = selectInputBox();
+    public WebElement getMyUserId() {
+        return webDriver.findElement(By.xpath(MY_USER_ID));
+    }
 
-        Toolkit.getDefaultToolkit()
-                .getSystemClipboard()
-                .setContents(new StringSelection(message), null);
-
-        inputBox.sendKeys(Keys.chord(Keys.CONTROL, "v") + Keys.ENTER);
+    public void sendMessage(Message message) {
+        message.sendMessage(selectInputBox());
     }
 
     private WebElement selectInputBox() {
-        final String inputBox = "//div[@class='notranslate _5rpu']";
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(inputBox)));
-        WebElement inputBoxElement = webDriver.findElement(By.xpath(inputBox));
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(INPUT_FIELD)));
+        WebElement inputBoxElement = webDriver.findElement(By.xpath(INPUT_FIELD));
         inputBoxElement.click();
 
         return inputBoxElement;
     }
 
-    public String getLatestMessage() {
-        WebElement messageElement = webDriver.findElement(By.xpath("(//div[@body and @data-tooltip-position='left'])[last()]"));
-        return messageElement.getAttribute("body");
+    public Message getLatestMessage(ArrayList<Human> people) {
+        WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
+        return new Message(messageElement, people);
+    }
+
+    public void waitForMessagesToLoad() {
+        messageWait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(MESSAGE_CONTAINER)));
     }
 
     public void waitForNewMessage() {
         messageWait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
-                By.xpath("(//div[@body and @data-tooltip-position='left'])"),
+                By.xpath(MESSAGES_OTHERS),
                 getNumberOfMessagesDisplayed()));
     }
 
     public int getNumberOfMessagesDisplayed() {
-        return webDriver.findElements(By.xpath("(//div[@body and @data-tooltip-position='left'])")).size();
+        return webDriver.findElements(By.xpath(MESSAGES_OTHERS)).size();
     }
 
 }
