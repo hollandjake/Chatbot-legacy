@@ -1,5 +1,6 @@
 package bot.utils;
 
+import bot.Chatbot;
 import org.json.simple.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -7,7 +8,6 @@ import org.openqa.selenium.WebElement;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.util.ArrayList;
 import java.util.Date;
 
 import static bot.utils.CONSTANTS.DATE_FORMATTER;
@@ -19,13 +19,15 @@ public class Message {
     private final String message;
     private final Date date = new Date();
 
+    private boolean containsCommand = false;
+
     public Message(Human me, String message) {
         this.sender = me; //Sender is the bot
         this.message = message;
     }
 
-    public Message(WebElement webElement, ArrayList<Human> people) {
-        this.sender = Human.getFromElement(webElement, people);
+    public Message(WebElement webElement, Chatbot chatbot) {
+        this.sender = Human.getFromElement(webElement, chatbot.getPeople());
 
         WebElement messageBody = webElement.findElement(By.xpath(MESSAGE_TEXT));
         if (messageBody != null) {
@@ -33,6 +35,8 @@ public class Message {
         } else {
             this.message = "";
         }
+
+        this.containsCommand = chatbot.containsCommand(this);
     }
 
     public Human getSender() {
@@ -41,6 +45,10 @@ public class Message {
 
     public String getMessage() {
         return message;
+    }
+
+    public boolean doesContainsCommand() {
+        return containsCommand;
     }
 
     private void sendMessage(WebElement inputBox, String message) {

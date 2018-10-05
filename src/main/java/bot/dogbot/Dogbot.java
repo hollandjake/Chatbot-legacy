@@ -9,7 +9,7 @@ public class Dogbot extends Chatbot {
 
     @Override
     protected void loadModules() {
-        modules.add(new Quote(messageLog));
+        modules.add(new Quote(this));
     }
 
     public Dogbot(String username, String password, String threadId, boolean debugMode) {

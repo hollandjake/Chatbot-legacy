@@ -1,5 +1,6 @@
 package bot.utils;
 
+import bot.Chatbot;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -12,20 +13,19 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
-import java.util.ArrayList;
 
 import static bot.utils.XPATHS.*;
 
 public class WebController {
-    private Human me;
+    private Chatbot chatbot;
     private final ChromeDriverService service;
     private final WebDriver webDriver;
     private final Actions keyboard;
     private final WebDriverWait wait;
     private final WebDriverWait messageWait;
 
-    public WebController(Duration messageTimeout) {
+    public WebController(Chatbot chatbot) {
+        this.chatbot = chatbot;
         ClassLoader classLoader = getClass().getClassLoader();
         File driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
                 new File(classLoader.getResource("drivers/windows/chromedriver.exe").getFile()) :
@@ -45,7 +45,7 @@ public class WebController {
         keyboard = new Actions(webDriver);
 
         wait = new WebDriverWait(webDriver, 5);
-        messageWait = new WebDriverWait(webDriver, messageTimeout.getSeconds());
+        messageWait = new WebDriverWait(webDriver, chatbot.getMessageTimeout().getSeconds());
     }
 
     public void quit() {
@@ -67,7 +67,7 @@ public class WebController {
 
     public void gotoFacebookThread(String threadId) {
         webDriver.get("https://www.messenger.com/t/" + threadId);
-        me = Human.createForBot(getMyUserId());
+        chatbot.setMe(Human.createForBot(getMyUserId()));
     }
 
     public WebElement getMyUserId() {
@@ -75,7 +75,7 @@ public class WebController {
     }
 
     public void sendMessage(String message) {
-        new Message(me, message).sendMessage(selectInputBox());
+        new Message(chatbot.getMe(), message).sendMessage(selectInputBox());
     }
 
     public void sendMessage(Message message) {
@@ -90,9 +90,9 @@ public class WebController {
         return inputBoxElement;
     }
 
-    public Message getLatestMessage(ArrayList<Human> people) {
+    public Message getLatestMessage() {
         WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
-        return new Message(messageElement, people);
+        return new Message(messageElement, chatbot);
     }
 
     public void waitForMessagesToLoad() {

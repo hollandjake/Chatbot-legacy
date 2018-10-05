@@ -4,6 +4,8 @@ import bot.utils.Human;
 import bot.utils.Message;
 import bot.utils.Module;
 import bot.utils.WebController;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -13,18 +15,19 @@ import java.util.ResourceBundle;
 
 public class Chatbot {
     //Constants
-    public final ArrayList<Message> messageLog = new ArrayList<>();
+    private final ArrayList<Message> messageLog = new ArrayList<>();
     private final ArrayList<Human> people = new ArrayList<>();
 
     private final String shutdownCode = Integer.toString(new Random().nextInt(99999));
     private final Date startTime = new Date();
 
     private final Duration messageTimeout = Duration.ofMinutes(1);
-    private final WebController webController = new WebController(messageTimeout);
+    private final WebController webController = new WebController(this);
 
     //Variables
     private boolean running = true;
     private String threadId;
+    private Human me;
 
     private String initMessage = "Chatbot is online";
 
@@ -47,6 +50,35 @@ public class Chatbot {
     }
 
     protected void loadModules() {
+    }
+
+    public boolean containsCommand(Message message) {
+        for (Module module : modules) {
+            if (!module.getMatch(message).equals("")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public ArrayList<Message> getMessageLog() {
+        return messageLog;
+    }
+
+    public Duration getMessageTimeout() {
+        return messageTimeout;
+    }
+
+    public Human getMe() {
+        return me;
+    }
+
+    public void setMe(Human me) {
+        this.me = me;
+    }
+
+    public ArrayList<Human> getPeople() {
+        return people;
     }
 
     public void sendMessage(String message) {
@@ -94,7 +126,7 @@ public class Chatbot {
         while (running) {
             try {
                 webController.waitForNewMessage();
-                Message newMessage = webController.getLatestMessage(people);
+                Message newMessage = webController.getLatestMessage();
                 messageLog.add(newMessage);
 
                 if (debugMode) {
@@ -103,13 +135,17 @@ public class Chatbot {
 
                 //Handle options
                 for (Module module : modules) {
-                    module.process(this, newMessage);
+                    module.process(newMessage);
                 }
 
-            } catch (org.openqa.selenium.TimeoutException e) {
+            } catch (TimeoutException e) {
                 if (debugMode) {
                     System.out.println("No messaged received in the last " + messageTimeout + "s");
                 }
+            } catch (WebDriverException e) {
+                System.out.println("Browser was closed, program is ended");
+                webController.quit();
+                System.exit(1);
             }
         }
     }
