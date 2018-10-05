@@ -24,13 +24,19 @@ public class Dogbot extends Chatbot {
 
         for (int i = 0; i < args.length - 1; i++) {
             //Skip last one since this is only checking for modifiers
-            String arg = args[i];
-            if (arg.equals("-c")) {
-                configName = args[i + 1];
-            } else if (arg.equals("-t")) {
-                threadId = args[i + 1];
+            String[] subArgs = args[i].split("=");
+
+            switch (subArgs[0]) {
+                case "config":
+                    configName = subArgs[1];
+                    break;
+                case "threadId":
+                case "threadid":
+                    threadId = subArgs[1];
+                    break;
             }
         }
+
         if (configName != null) {
             if (threadId != null) {
                 bot = new Dogbot(configName, threadId);

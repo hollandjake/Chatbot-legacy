@@ -24,9 +24,8 @@ public class WebController {
     private WebDriverWait messageWait;
 
     public WebController() {
-        File driver;
         ClassLoader classLoader = getClass().getClassLoader();
-        driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
+        File driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
                 new File(classLoader.getResource("drivers/windows/chromedriver.exe").getFile()) :
                 new File(classLoader.getResource("drivers/linux/chromedriver").getFile());
 
@@ -57,7 +56,6 @@ public class WebController {
         final String loginButton = "//button[@id='loginbutton']";
 
         //Goto page
-        System.out.println("wow");
         webDriver.get("https://www.messenger.com");
 
         wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(emailBox)));
@@ -79,7 +77,7 @@ public class WebController {
                 .getSystemClipboard()
                 .setContents(new StringSelection(message), null);
 
-        inputBox.sendKeys(Keys.chord(Keys.CONTROL,"v")+Keys.ENTER);
+        inputBox.sendKeys(Keys.chord(Keys.CONTROL, "v") + Keys.ENTER);
     }
 
     private WebElement selectInputBox() {
@@ -91,18 +89,18 @@ public class WebController {
         return inputBoxElement;
     }
 
-    public String getLatestMessage(){
+    public String getLatestMessage() {
         WebElement messageElement = webDriver.findElement(By.xpath("(//div[@body and @data-tooltip-position='left'])[last()]"));
         return messageElement.getAttribute("body");
     }
 
-    public void waitForNewMessage(){
+    public void waitForNewMessage() {
         messageWait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
                 By.xpath("(//div[@body and @data-tooltip-position='left'])"),
                 getNumberOfMessagesDisplayed()));
     }
 
-    public int getNumberOfMessagesDisplayed(){
+    public int getNumberOfMessagesDisplayed() {
         return webDriver.findElements(By.xpath("(//div[@body and @data-tooltip-position='left'])")).size();
     }
 
