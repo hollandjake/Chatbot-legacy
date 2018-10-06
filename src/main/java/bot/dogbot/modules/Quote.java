@@ -76,9 +76,13 @@ public class Quote implements Module {
     }
 
     private void quote() {
-        JSONObject quote = (JSONObject) quotesList.get((int) (Math.random() * quotesList.size()));
-        JSONObject sender = (JSONObject) quote.get("sender");
-        chatbot.sendMessage("\"" + quote.get("message") + "\" - " + sender.get("name") + " [" + quote.get("timestamp") + "]");
+        if (quotesList.size() > 0) {
+            JSONObject quote = (JSONObject) quotesList.get((int) (Math.random() * quotesList.size()));
+            JSONObject sender = (JSONObject) quote.get("sender");
+            chatbot.sendMessage("\"" + quote.get("message") + "\" - " + sender.get("name") + " [" + quote.get("timestamp") + "]");
+        } else {
+            chatbot.sendMessage("There are no quotes available, why not try !grab or !grab [x] to make some");
+        }
     }
 
     private void grab(Message commandMessage, Message previousMessage) {
