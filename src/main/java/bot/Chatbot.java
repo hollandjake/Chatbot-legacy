@@ -33,20 +33,20 @@ public class Chatbot {
 
     protected final ArrayList<Module> modules = new ArrayList<>();
 
-    public Chatbot(String username, String password, String threadId, boolean debugMode) {
-        run(username, password, threadId, debugMode);
+    public Chatbot(String username, String password, String threadId, boolean debugMode, boolean silentMode) {
+        run(username, password, threadId, debugMode, silentMode);
     }
 
-    public Chatbot(String configName, String threadId, boolean debugMode) {
-        runFromConfigWithThreadId(configName, threadId, debugMode);
+    public Chatbot(String configName, String threadId, boolean debugMode, boolean silentMode) {
+        runFromConfigWithThreadId(configName, threadId, debugMode, silentMode);
     }
 
-    public Chatbot(String configName, boolean debugMode) {
-        runFromConfig(configName, debugMode);
+    public Chatbot(String configName, boolean debugMode, boolean silentMode) {
+        runFromConfig(configName, debugMode, silentMode);
     }
 
     public Chatbot() {
-        runFromConfig("config", false);
+        runFromConfig("config", false, false);
     }
 
     protected void loadModules() {
@@ -89,22 +89,22 @@ public class Chatbot {
         webController.sendMessage(message);
     }
 
-    private void runFromConfig(String configName, boolean debugMode) {
+    private void runFromConfig(String configName, boolean debugMode, boolean silentMode) {
         ResourceBundle config = ResourceBundle.getBundle(configName);
         String threadId = config.getString("threadId");
 
-        runFromConfigWithThreadId(configName, threadId, debugMode);
+        runFromConfigWithThreadId(configName, threadId, debugMode, silentMode);
     }
 
-    private void runFromConfigWithThreadId(String configName, String threadId, boolean debugMode) {
+    private void runFromConfigWithThreadId(String configName, String threadId, boolean debugMode, boolean silentMode) {
         ResourceBundle config = ResourceBundle.getBundle(configName);
         String username = config.getString("username");
         String password = config.getString("password");
 
-        run(username, password, threadId, debugMode);
+        run(username, password, threadId, debugMode, silentMode);
     }
 
-    private void run(String username, String password, String threadId, boolean debugMode) {
+    private void run(String username, String password, String threadId, boolean debugMode, boolean silentMode) {
         //Output Shutdown code
         System.out.println("Shutdown code: " + shutdownCode);
 
@@ -119,7 +119,7 @@ public class Chatbot {
         webController.waitForMessagesToLoad();
 
         //Init message
-        if (!debugMode) {
+        if (!silentMode) {
             webController.sendMessage(initMessage);
         }
 
@@ -140,7 +140,7 @@ public class Chatbot {
 
             } catch (TimeoutException e) {
                 if (debugMode) {
-                    System.out.println("No messaged received in the last " + messageTimeout + "s");
+                    System.out.println("No messaged received in the last " + messageTimeout);
                 }
             } catch (WebDriverException e) {
                 System.out.println("Browser was closed, program is ended");

@@ -12,16 +12,16 @@ public class Dogbot extends Chatbot {
         modules.add(new Quote(this));
     }
 
-    public Dogbot(String username, String password, String threadId, boolean debugMode) {
-        super(username, password, threadId, debugMode);
+    public Dogbot(String username, String password, String threadId, boolean debugMode, boolean silentMode) {
+        super(username, password, threadId, debugMode, silentMode);
     }
 
-    public Dogbot(String configName, String threadId, boolean debugMode) {
-        super(configName, threadId, debugMode);
+    public Dogbot(String configName, String threadId, boolean debugMode, boolean silentMode) {
+        super(configName, threadId, debugMode, silentMode);
     }
 
-    public Dogbot(String configName, boolean debugMode) {
-        super(configName, debugMode);
+    public Dogbot(String configName, boolean debugMode, boolean silentMode) {
+        super(configName, debugMode, silentMode);
     }
 
     public static void main(String[] args) {
@@ -34,6 +34,7 @@ public class Dogbot extends Chatbot {
         String password = null;
 
         boolean debugMode = false;
+        boolean silentMode = false;
 
         for (int i = 0; i < args.length; i++) {
             //Remove any extra quotes someone may have added
@@ -61,17 +62,21 @@ public class Dogbot extends Chatbot {
                 case "-d":
                     debugMode = true;
                     break;
+                case "-silent":
+                case "-s":
+                    silentMode = true;
+                    break;
             }
         }
 
         //Create bot
         if (username != null && password != null && threadId != null) {
-            bot = new Dogbot(username, password, threadId, debugMode);
+            bot = new Dogbot(username, password, threadId, debugMode, silentMode);
         } else {
             if (threadId != null) {
-                bot = new Dogbot(configName, threadId, debugMode);
+                bot = new Dogbot(configName, threadId, debugMode, silentMode);
             } else {
-                bot = new Dogbot(configName, debugMode);
+                bot = new Dogbot(configName, debugMode, silentMode);
             }
         }
     }
