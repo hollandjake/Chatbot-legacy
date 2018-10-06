@@ -4,6 +4,7 @@ import bot.utils.Human;
 import bot.utils.Message;
 import bot.utils.Module;
 import bot.utils.WebController;
+import bot.utils.exceptions.MalformedCommandException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 
@@ -134,8 +135,12 @@ public class Chatbot {
                 }
 
                 //Handle options
-                for (Module module : modules) {
-                    module.process(newMessage);
+                try {
+                    for (Module module : modules) {
+                        module.process(newMessage);
+                    }
+                } catch (MalformedCommandException e) {
+                    sendMessage("There seems to be an issue with your command");
                 }
 
             } catch (TimeoutException e) {

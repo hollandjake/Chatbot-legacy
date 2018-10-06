@@ -3,6 +3,7 @@ package bot.dogbot.modules;
 import bot.Chatbot;
 import bot.utils.Message;
 import bot.utils.Module;
+import bot.utils.exceptions.MalformedCommandException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -12,6 +13,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static bot.utils.CONSTANTS.ACTIONIFY;
 
@@ -19,6 +23,7 @@ public class Quote implements Module {
     //Constants
     private final String QUOTE_REGEX = ACTIONIFY("quote");
     private final String GRAB_REGEX = ACTIONIFY("grab");
+    private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
     private final String RELOAD_QUOTE_REGEX = ACTIONIFY("quote reload");
     private final File quoteFile;
 
@@ -36,21 +41,25 @@ public class Quote implements Module {
     }
 
     @Override
-    public boolean process(Message message) {
+    public boolean process(Message message) throws MalformedCommandException {
         String match = getMatch(message);
         if (match.equals(QUOTE_REGEX)) {
             quote();
 
             return true;
         } else if (match.equals(GRAB_REGEX)) {
-
-            try {
-                grab(message, chatbot.getMessageLog().get(chatbot.getMessageLog().indexOf(message) - 1));
-            } catch (IndexOutOfBoundsException e) {
-                chatbot.sendMessage("That grab is a little too far for me");
-            }
+            grab(message, 1);
 
             return true;
+        } else if (match.equals(GRAB_OFFSET_REGEX)) {
+            Matcher matcher = Pattern.compile(GRAB_OFFSET_REGEX).matcher(message.getMessage());
+            if (matcher.find()) {
+                grab(message, Integer.parseInt(matcher.group(1)));
+
+                return true;
+            } else {
+                throw new MalformedCommandException();
+            }
         } else if (match.equals(RELOAD_QUOTE_REGEX)) {
             reloadQuotes();
             chatbot.sendMessage("Quotes updated");
@@ -68,6 +77,8 @@ public class Quote implements Module {
             return QUOTE_REGEX;
         } else if (messageBody.matches(GRAB_REGEX)) {
             return GRAB_REGEX;
+        } else if (messageBody.matches(GRAB_OFFSET_REGEX)) {
+            return GRAB_OFFSET_REGEX;
         } else if (messageBody.matches(RELOAD_QUOTE_REGEX)) {
             return RELOAD_QUOTE_REGEX;
         } else {
@@ -85,29 +96,38 @@ public class Quote implements Module {
         }
     }
 
-    private void grab(Message commandMessage, Message previousMessage) {
-
-        //Check if message contains a command
-        if (previousMessage.doesContainsCommand()) {
-            chatbot.sendMessage("Don't do that >:(");
-            return;
-        } else if (previousMessage.getSender().equals(commandMessage.getSender())) {
-            chatbot.sendMessage("Did you just try and grab yourself? \uD83D\uDE20");
-            return;
-        }
-
-        quotesList.add(previousMessage.toJSON());
+    private void grab(Message commandMessage, int offset) {
+        ArrayList<Message> messageLog = chatbot.getMessageLog();
+        int commandIndex = messageLog.indexOf(commandMessage);
+        int targetMessageIndex = commandIndex - offset;
 
         try {
-            FileWriter fileWriter = new FileWriter(quoteFile, false);
-            quotesList.writeJSONString(fileWriter);
-            fileWriter.close();
-        } catch (IOException e) {
-            System.out.println("Failed to save quote");
-            e.printStackTrace();
-        }
+            Message previousMessage = messageLog.get(targetMessageIndex);
 
-        chatbot.sendMessage("Grabbed \"" + previousMessage.getMessage() + "\"");
+            //Check if message contains a command
+            if (previousMessage.doesContainsCommand()) {
+                chatbot.sendMessage("Don't do that >:(");
+                return;
+            } else if (previousMessage.getSender().equals(commandMessage.getSender())) {
+                chatbot.sendMessage("Did you just try and grab yourself? \uD83D\uDE20");
+                return;
+            }
+
+            quotesList.add(previousMessage.toJSON());
+
+            try {
+                FileWriter fileWriter = new FileWriter(quoteFile, false);
+                quotesList.writeJSONString(fileWriter);
+                fileWriter.close();
+            } catch (IOException e) {
+                System.out.println("Failed to save quote");
+                e.printStackTrace();
+            }
+
+            chatbot.sendMessage("Grabbed \"" + previousMessage.getMessage() + "\"");
+        } catch (IndexOutOfBoundsException e) {
+            chatbot.sendMessage("That grab is a little too far for me");
+        }
     }
 
     private void reloadQuotes() {
