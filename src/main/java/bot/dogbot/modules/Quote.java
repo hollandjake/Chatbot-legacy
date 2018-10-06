@@ -45,7 +45,7 @@ public class Quote implements Module {
         } else if (match.equals(GRAB_REGEX)) {
 
             try {
-                grab(chatbot.getMessageLog().get(chatbot.getMessageLog().indexOf(message) - 1));
+                grab(message, chatbot.getMessageLog().get(chatbot.getMessageLog().indexOf(message) - 1));
             } catch (IndexOutOfBoundsException e) {
                 chatbot.sendMessage("That grab is a little too far for me");
             }
@@ -81,11 +81,14 @@ public class Quote implements Module {
         chatbot.sendMessage("\"" + quote.get("message") + "\" - " + sender.get("name") + " [" + quote.get("timestamp") + "]");
     }
 
-    private void grab(Message previousMessage) {
+    private void grab(Message commandMessage, Message previousMessage) {
 
         //Check if message contains a command
         if (previousMessage.doesContainsCommand()) {
             chatbot.sendMessage("Don't do that >:(");
+            return;
+        } else if (previousMessage.getSender().equals(commandMessage.getSender())) {
+            chatbot.sendMessage("Did you just try and grab yourself? \uD83D\uDE20");
             return;
         }
 
