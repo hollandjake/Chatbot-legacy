@@ -1,4 +1,4 @@
-package bot.dogbot.modules;
+package bot.modules;
 
 import bot.Chatbot;
 import bot.utils.Message;
@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 
 import static bot.utils.CONSTANTS.ACTIONIFY;
 
-public class Quote implements Module {
+public class Quotes implements Module {
     //Constants
     private final String QUOTE_REGEX = ACTIONIFY("quote");
     private final String GRAB_REGEX = ACTIONIFY("grab");
@@ -34,7 +34,7 @@ public class Quote implements Module {
     private JSONArray quotesList;
 
 
-    public Quote(Chatbot chatbot) {
+    public Quotes(Chatbot chatbot) {
         this.chatbot = chatbot;
         quoteFile = new File(appendModulePath(chatbot.getThreadId() + "-quotes.json"));
         reloadQuotes();
@@ -88,7 +88,7 @@ public class Quote implements Module {
 
     @Override
     public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/Quote/" + message);
+        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
     }
 
     private void quote() {
@@ -154,10 +154,10 @@ public class Quote implements Module {
                 fileWriter.close();
             }
         } catch (IOException e) {
-            System.out.println("Quote are unavailable for this session due to an error reading the file");
+            System.out.println("Quotes are unavailable for this session due to an error reading the file");
             e.printStackTrace();
         } catch (ParseException e) {
-            System.out.println("Quote are unavailable for this session due to the error");
+            System.out.println("Quotes are unavailable for this session due to the error");
             e.printStackTrace();
         }
     }

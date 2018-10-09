@@ -10,6 +10,7 @@ import java.awt.datatransfer.Clipboard;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 
 public interface CONSTANTS {
     Clipboard CLIPBOARD = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -17,6 +18,7 @@ public interface CONSTANTS {
     String PASTE = Keys.chord(Keys.CONTROL, "v");
 
     SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yy");
+    DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
 
     static String ACTIONIFY(String arg) {
         return "(?i)^!\\s*" + arg + "$";
