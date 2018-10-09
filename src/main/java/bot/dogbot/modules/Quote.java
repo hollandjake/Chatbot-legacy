@@ -36,7 +36,7 @@ public class Quote implements Module {
 
     public Quote(Chatbot chatbot) {
         this.chatbot = chatbot;
-        quoteFile = new File("src/main/resources/modules/quotes.json");
+        quoteFile = new File(appendModulePath(chatbot.getThreadId() + "-quotes.json"));
         reloadQuotes();
     }
 
@@ -86,6 +86,11 @@ public class Quote implements Module {
         }
     }
 
+    @Override
+    public String appendModulePath(String message) {
+        return chatbot.appendRootPath("modules/Quote/" + message);
+    }
+
     private void quote() {
         if (quotesList.size() > 0) {
             JSONObject quote = (JSONObject) quotesList.get((int) (Math.random() * quotesList.size()));
@@ -132,9 +137,22 @@ public class Quote implements Module {
 
     private void reloadQuotes() {
         try {
-            FileReader fileReader = new FileReader(quoteFile);
-            quotesList = (JSONArray) jsonParser.parse(fileReader);
-            fileReader.close();
+            if (quoteFile.exists()) {
+                FileReader fileReader = new FileReader(quoteFile);
+                quotesList = (JSONArray) jsonParser.parse(fileReader);
+                fileReader.close();
+            } else {
+                File directory = quoteFile.getParentFile();
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                }
+                quoteFile.createNewFile();
+                quotesList = new JSONArray();
+
+                FileWriter fileWriter = new FileWriter(quoteFile, false);
+                quotesList.writeJSONString(fileWriter);
+                fileWriter.close();
+            }
         } catch (IOException e) {
             System.out.println("Quote are unavailable for this session due to an error reading the file");
             e.printStackTrace();
@@ -143,4 +161,6 @@ public class Quote implements Module {
             e.printStackTrace();
         }
     }
+
+
 }

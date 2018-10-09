@@ -6,4 +6,6 @@ public interface Module {
     boolean process(Message message) throws MalformedCommandException;
 
     String getMatch(Message message);
+
+    String appendModulePath(String message);
 }

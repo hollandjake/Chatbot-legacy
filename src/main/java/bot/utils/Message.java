@@ -6,17 +6,18 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.util.Date;
 
-import static bot.utils.CONSTANTS.DATE_FORMATTER;
-import static bot.utils.CONSTANTS.PASTE;
+import static bot.utils.CONSTANTS.*;
 import static bot.utils.XPATHS.MESSAGE_TEXT;
 
 public class Message {
     private final Human sender;
     private final String message;
+    private final Image image;
     private final Date date = new Date();
 
     private boolean containsCommand = false;
@@ -24,10 +25,12 @@ public class Message {
     public Message(Human me, String message) {
         this.sender = me; //Sender is the bot
         this.message = message;
+        this.image = null;
     }
 
     public Message(WebElement webElement, Chatbot chatbot) {
         this.sender = Human.getFromElement(webElement, chatbot.getPeople());
+        this.image = null;
 
         WebElement messageBody = webElement.findElement(By.xpath(MESSAGE_TEXT));
         if (messageBody != null) {
@@ -37,6 +40,12 @@ public class Message {
         }
 
         this.containsCommand = chatbot.containsCommand(this);
+    }
+
+    public Message(Human me, String message, String image) {
+        this.sender = me; //Sender is the bot
+        this.message = message;
+        this.image = new ImageIcon(image).getImage();
     }
 
     public Human getSender() {
@@ -51,16 +60,29 @@ public class Message {
         return containsCommand;
     }
 
-    private void sendMessage(WebElement inputBox, String message) {
-        Toolkit.getDefaultToolkit()
-                .getSystemClipboard()
-                .setContents(new StringSelection(message), null);
-
+    private static void sendMessage(WebElement inputBox, String message) {
+        CLIPBOARD.setContents(new StringSelection(message), null);
         inputBox.sendKeys(PASTE + Keys.ENTER);
     }
 
+    private static void sendMessageWithImage(WebElement inputBox, String message, Image image) {
+        CLIPBOARD.setContents(new ImageTransferable(image), null);
+        inputBox.sendKeys(PASTE);
+
+        if (!message.isEmpty()) {
+            CLIPBOARD.setContents(new StringSelection(message), null);
+            inputBox.sendKeys(PASTE);
+        }
+
+        inputBox.sendKeys(Keys.ENTER);
+    }
+
     public void sendMessage(WebElement inputBox) {
-        sendMessage(inputBox, message);
+        if (image != null) {
+            sendMessageWithImage(inputBox, message, image);
+        } else {
+            sendMessage(inputBox, message);
+        }
     }
 
     public void sendDebugMessage(WebElement inputBox) {

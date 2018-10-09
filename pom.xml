@@ -6,7 +6,7 @@
 
     <groupId>org.bots</groupId>
     <artifactId>Chatbots</artifactId>
-    <version>0.1</version>
+    <version>0.1.0</version>
     <build>
         <plugins>
             <plugin>
@@ -17,8 +17,32 @@
                     <target>10</target>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>2.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <dateFormat>yyyyMMdd-HHmmss</dateFormat>
+                    <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+                    <generateGitPropertiesFile>false</generateGitPropertiesFile>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <properties>
+        <!--suppress UnresolvedMavenProperty -->
+        <version.number>${git.commit.time}.${git.commit.id.abbrev}</version.number>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -42,6 +66,11 @@
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <version>3.14.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>3.0</version>
         </dependency>
     </dependencies>
 </project>
