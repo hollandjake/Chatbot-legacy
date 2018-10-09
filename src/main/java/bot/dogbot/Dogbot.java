@@ -1,7 +1,8 @@
 package bot.dogbot;
 
 import bot.Chatbot;
-import bot.dogbot.modules.Quote;
+import bot.modules.Quotes;
+import bot.modules.Stats;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,8 +11,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static bot.utils.CONSTANTS.getVersion;
 
 public class Dogbot extends Chatbot {
 
@@ -31,18 +30,20 @@ public class Dogbot extends Chatbot {
             System.out.println("Boot messages are unavailable");
         }
 
+        Stats stats = (Stats) modules.get("Stats");
         webController.sendImageWithMessage(
                 bootImages.get((int) (Math.random() * bootImages.size())).getPath(),
-                "Dogbot " + getVersion() + " is online" +
+                "Dogbot is online" +
                         (bootMessages.size() > 0 ?
                                 "\n" + bootMessages.get((int) (Math.random() * bootMessages.size())) :
                                 ""
-                        ));
+                        ) + "\n\n" + stats.getMinifiedStats());
     }
 
     @Override
     protected void loadModules() {
-        modules.add(new Quote(this));
+        modules.put("Quotes", new Quotes(this));
+        modules.put("Stats", new Stats(this));
     }
 
     public Dogbot(String username, String password, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages) {

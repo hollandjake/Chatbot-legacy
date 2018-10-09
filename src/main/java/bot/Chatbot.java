@@ -10,8 +10,9 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.ResourceBundle;
 
@@ -23,7 +24,7 @@ public class Chatbot {
     private final ArrayList<Human> people = new ArrayList<>();
 
     private final String shutdownCode = Integer.toString(new Random().nextInt(99999));
-    private final Date startTime = new Date();
+    private final LocalDateTime startupTime = LocalDateTime.now();
 
     private final Duration messageTimeout = Duration.ofMinutes(1);
     protected final WebController webController;
@@ -33,7 +34,7 @@ public class Chatbot {
     private String threadId;
     private Human me;
 
-    protected final ArrayList<Module> modules = new ArrayList<>();
+    protected final HashMap<String, Module> modules = new HashMap<>();
 
     public Chatbot(String username, String password, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages) {
         webController = new WebController(this, debugMessages);
@@ -101,7 +102,7 @@ public class Chatbot {
 
                 //Handle options
                 try {
-                    for (Module module : modules) {
+                    for (Module module : modules.values()) {
                         module.process(newMessage);
                     }
                 } catch (MalformedCommandException e) {
@@ -138,7 +139,7 @@ public class Chatbot {
 
     //Methods
     public boolean containsCommand(Message message) {
-        for (Module module : modules) {
+        for (Module module : modules.values()) {
             if (!module.getMatch(message).equals("")) {
                 return true;
             }
@@ -176,5 +177,9 @@ public class Chatbot {
 
     public String getThreadId() {
         return threadId;
+    }
+
+    public LocalDateTime getStartupTime() {
+        return startupTime;
     }
 }
