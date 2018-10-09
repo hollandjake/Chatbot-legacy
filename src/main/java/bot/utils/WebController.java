@@ -23,14 +23,18 @@ public class WebController {
     private final Actions keyboard;
     private final WebDriverWait wait;
     private final WebDriverWait messageWait;
+    private final boolean debugMessages;
 
-    public WebController(Chatbot chatbot) {
+    public WebController(Chatbot chatbot, boolean debugMessages) {
         this.chatbot = chatbot;
+        this.debugMessages = debugMessages;
+
         ClassLoader classLoader = getClass().getClassLoader();
         File driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
                 new File(classLoader.getResource("drivers/windows/chromedriver.exe").getFile()) :
                 new File(classLoader.getResource("drivers/linux/chromedriver").getFile());
 
+        //Create service
         service = new ChromeDriverService.Builder()
                 .usingDriverExecutable(driver)
                 .usingAnyFreePort()
@@ -41,9 +45,11 @@ public class WebController {
             e.printStackTrace();
         }
 
+        //Setup drivers
         webDriver = new RemoteWebDriver(service.getUrl(), new ChromeOptions());
         keyboard = new Actions(webDriver);
 
+        //Setup waits
         wait = new WebDriverWait(webDriver, 5);
         messageWait = new WebDriverWait(webDriver, chatbot.getMessageTimeout().getSeconds());
     }
@@ -74,12 +80,26 @@ public class WebController {
         return webDriver.findElement(By.xpath(MY_USER_ID));
     }
 
-    public void sendMessage(String message) {
-        new Message(chatbot.getMe(), message).sendMessage(selectInputBox());
+    //Sending Messages
+    public void sendMessage(Message message) {
+        WebElement inputBox = selectInputBox();
+        if (debugMessages) {
+            message.sendDebugMessage(inputBox);
+        } else {
+            message.sendMessage(inputBox);
+        }
     }
 
-    public void sendMessage(Message message) {
-        message.sendMessage(selectInputBox());
+    public void sendMessage(String message) {
+        sendMessage(new Message(chatbot.getMe(), message));
+    }
+
+    public void sendImageWithMessage(String image, String message) {
+        sendMessage(new Message(chatbot.getMe(), message, image));
+    }
+
+    public void sendImage(String image) {
+        sendImageWithMessage(image, "");
     }
 
     private WebElement selectInputBox() {
@@ -90,11 +110,19 @@ public class WebController {
         return inputBoxElement;
     }
 
+    //Getters
     public Message getLatestMessage() {
         WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
+        //Move mouse over message so messenger marks it as read
+        new Actions(webDriver).moveToElement(messageElement);
         return new Message(messageElement, chatbot);
     }
 
+    public int getNumberOfMessagesDisplayed() {
+        return webDriver.findElements(By.xpath(MESSAGES_OTHERS)).size();
+    }
+
+    //Waits
     public void waitForMessagesToLoad() {
         messageWait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(MESSAGE_CONTAINER)));
     }
@@ -104,10 +132,5 @@ public class WebController {
                 By.xpath(MESSAGES_OTHERS),
                 getNumberOfMessagesDisplayed()));
     }
-
-    public int getNumberOfMessagesDisplayed() {
-        return webDriver.findElements(By.xpath(MESSAGES_OTHERS)).size();
-    }
-
 }
 
