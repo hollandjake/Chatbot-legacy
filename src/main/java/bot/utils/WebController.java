@@ -24,6 +24,7 @@ public class WebController {
     private final WebDriverWait wait;
     private final WebDriverWait messageWait;
     private final boolean debugMessages;
+    private boolean sendingMessage = false;
 
     public WebController(Chatbot chatbot, boolean debugMessages) {
         this.chatbot = chatbot;
@@ -88,6 +89,9 @@ public class WebController {
         } else {
             message.sendMessage(inputBox);
         }
+        //Wait for message to be sent
+        wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.xpath(MESSAGES_MINE),
+                getNumberOfMyMessagesDisplayed()));
     }
 
     public void sendMessage(String message) {
@@ -96,6 +100,10 @@ public class WebController {
 
     public void sendImageWithMessage(String image, String message) {
         sendMessage(new Message(chatbot.getMe(), message, image));
+    }
+
+    public void sendImageFromURLWithMessage(String url, String message) {
+        sendMessage(Message.withImageFromURL(chatbot.getMe(), message, url));
     }
 
     public void sendImage(String image) {
@@ -120,6 +128,10 @@ public class WebController {
 
     public int getNumberOfMessagesDisplayed() {
         return webDriver.findElements(By.xpath(MESSAGES_OTHERS)).size();
+    }
+
+    public int getNumberOfMyMessagesDisplayed() {
+        return webDriver.findElements(By.xpath(MESSAGES_MINE)).size();
     }
 
     //Waits
