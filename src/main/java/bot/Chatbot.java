@@ -182,4 +182,8 @@ public class Chatbot {
     public LocalDateTime getStartupTime() {
         return startupTime;
     }
+
+    public Module getModule(String moduleName) {
+        return modules.get(moduleName);
+    }
 }
