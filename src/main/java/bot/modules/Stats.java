@@ -27,6 +27,9 @@ public class Stats implements Module {
         if (match.equals(STATS_REGEX)) {
             chatbot.sendMessage(getStats());
             return true;
+        } else if (match.equals(UPTIME_REGEX) || match.equals(PUPTIME_REGEX)) {
+            chatbot.sendMessage(getUptime());
+            return true;
         } else {
             return false;
         }
