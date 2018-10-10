@@ -71,6 +71,7 @@ public class Quotes implements Module {
     }
 
     @Override
+    @SuppressWarnings("Duplicates")
     public String getMatch(Message message) {
         String messageBody = message.getMessage();
         if (messageBody.matches(QUOTE_REGEX)) {
