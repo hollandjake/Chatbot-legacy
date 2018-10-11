@@ -1,23 +1,26 @@
 package bot.utils;
 
 public interface XPATHS {
-    //LOGIN
+    //region Login
     String LOGIN_EMAIL = "//input[@id='email']";
     String LOGIN_PASS = "//input[@id='pass']";
     String LOGIN_BUTTON = "//button[@id='loginbutton']";
+    //endregion
 
-    //Inputs
+    //region Inputs
     String INPUT_FIELD = "//div[@class='notranslate _5rpu']";
+    //endregion
 
-    //Loading
+    //region Loading
     String MESSAGE_CONTAINER = "//div[@aria-label='Messages']";
 
     /**
      * REQUIRES <strong>post-processing to find "uid":"&lt;uid&gt;"</strong>
      */
     String MY_USER_ID = "//script[starts-with(text(),'requireLazy([\"ix\"],function(ix){ix.add({\"496757\"')]";
+    //endregion
 
-    //Messages
+    //region Messages
     String MESSAGES = "//div[div/div[contains(@class,'ui9')]]";
     String MESSAGES_ALL = MESSAGES + "/div[contains(@class,'_o46')]";
     String MESSAGES_OTHERS = MESSAGES + "/div[contains(@class,'_29_7')]";
@@ -25,7 +28,7 @@ public interface XPATHS {
     String MESSAGES_MINE = MESSAGES + "/div[contains(@class,'_nd_')]";
     String MESSAGES_MINE_RECENT = "(" + MESSAGES_MINE + ")[last()]";
 
-
+    //region Requires MESSAGE ELEMENT
     /**
      * REQUIRES <strong>MESSAGE ELEMENT</strong>
      * <br><br>RETURNS -> @<strong>body</strong>
@@ -46,13 +49,6 @@ public interface XPATHS {
      * <br><br>RETURNS -> @<strong>participants</strong>
      */
     String MESSAGE_SENDER_ID = "./div[@participants]";
-
-//    String messageXpath = "//div[@class='_41ud']";
-//    String othersMessageXpath = "//div[@class='_41ud' and descendant::div[@data-tooltip-position='left']]";
-//    String myMessageXpath = "//div[@class='_41ud' and descendant::div[@data-tooltip-position='right']]";
-//
-//    String messageSenderNickname = "//h5[@aria-label]";
-//    String messageSenderRealName = "//parent::div/descendant::div[@class='_4ldz _1t_r' and @data-tooltip-content]";
-//    String messageSenderId = "//descendant::div[@participants]";
-//    String MESSAGE_BODY = "//descendant::div[@body]";
+    //endregion
+    //endregion
 }

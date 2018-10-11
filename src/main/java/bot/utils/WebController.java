@@ -17,6 +17,7 @@ import java.io.IOException;
 import static bot.utils.XPATHS.*;
 
 public class WebController {
+    //region Variables
     private Chatbot chatbot;
     private final ChromeDriverService service;
     private final WebDriver webDriver;
@@ -24,7 +25,7 @@ public class WebController {
     private final WebDriverWait wait;
     private final WebDriverWait messageWait;
     private final boolean debugMessages;
-    private boolean sendingMessage = false;
+    //endregion
 
     public WebController(Chatbot chatbot, boolean debugMessages) {
         this.chatbot = chatbot;
@@ -59,8 +60,8 @@ public class WebController {
         webDriver.quit();
     }
 
+    //region Login
     public void login(String username, String password) {
-
         //Goto page
         webDriver.get("https://www.messenger.com");
 
@@ -76,12 +77,9 @@ public class WebController {
         webDriver.get("https://www.messenger.com/t/" + threadId);
         chatbot.setMe(Human.createForBot(getMyUserId()));
     }
+    //endregion
 
-    public WebElement getMyUserId() {
-        return webDriver.findElement(By.xpath(MY_USER_ID));
-    }
-
-    //Sending Messages
+    //region Sending messages
     public void sendMessage(Message message) {
         WebElement inputBox = selectInputBox();
         if (debugMessages) {
@@ -117,8 +115,9 @@ public class WebController {
 
         return inputBoxElement;
     }
+    //endregion
 
-    //Getters
+    //region Getters
     public Message getLatestMessage() {
         WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
         //Move mouse over message so messenger marks it as read
@@ -134,7 +133,12 @@ public class WebController {
         return webDriver.findElements(By.xpath(MESSAGES_MINE)).size();
     }
 
-    //Waits
+    public WebElement getMyUserId() {
+        return webDriver.findElement(By.xpath(MY_USER_ID));
+    }
+    //endregion
+
+    //region Waits
     public void waitForMessagesToLoad() {
         messageWait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(MESSAGE_CONTAINER)));
     }
@@ -144,5 +148,6 @@ public class WebController {
                 By.xpath(MESSAGES_OTHERS),
                 getNumberOfMessagesDisplayed()));
     }
+    //endregion
 }
 

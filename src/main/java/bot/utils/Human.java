@@ -11,10 +11,16 @@ import java.util.regex.Pattern;
 import static bot.utils.XPATHS.*;
 
 public class Human {
+    //region Constants
+    protected final String userId;
+    //endregion
+
+    //region Variables
     protected String name;
     protected String nickname;
-    protected final String userId;
+    //endregion
 
+    //region Constructors
     private Human(WebElement webElement) {
         final Matcher matcher = Pattern.compile(".*?fbid:(\\d+).*")
                 .matcher(webElement.findElement(By.xpath(MESSAGE_SENDER_ID)).getAttribute("participants"));
@@ -26,22 +32,6 @@ public class Human {
 
     private Human(String userId) {
         this.userId = userId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public String getId() {
-        return userId;
-    }
-
-    public String toString() {
-        return "[" + userId + "] " + name + (nickname != null ? "(" + nickname + ")" : "");
     }
 
     public static Human getFromElement(WebElement webElement, ArrayList<Human> people) {
@@ -68,6 +58,21 @@ public class Human {
 
         return new Human(userId);
     }
+    //endregion
+
+    //region Getters and Setters
+    public String getName() {
+        return name;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public String getId() {
+        return userId;
+    }
+    //endregion
 
     public JSONObject toJSON() {
         JSONObject me = new JSONObject();
@@ -76,5 +81,9 @@ public class Human {
         me.put("USER_ID", userId);
 
         return me;
+    }
+
+    public String toString() {
+        return "[" + userId + "] " + name + (nickname != null ? "(" + nickname + ")" : "");
     }
 }

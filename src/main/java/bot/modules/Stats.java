@@ -8,19 +8,22 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
-import static bot.utils.CONSTANTS.*;
+import static bot.utils.CONSTANTS.ACTIONIFY;
+import static bot.utils.CONSTANTS.DATE_TIME_FORMATTER;
 
 public class Stats implements Module {
-    //Constants
+    //region Constants
     private final String STATS_REGEX = ACTIONIFY("stats");
     private final String UPTIME_REGEX = ACTIONIFY("uptime");
     private final String PUPTIME_REGEX = ACTIONIFY("puptime");
     private final Chatbot chatbot;
+    //endregion
 
     public Stats(Chatbot chatbot) {
         this.chatbot = chatbot;
     }
 
+    //region Overrides
     @Override
     public boolean process(Message message) {
         String match = getMatch(message);
@@ -55,18 +58,7 @@ public class Stats implements Module {
         return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
     }
 
-    public String getMinifiedStats() {
-        return "Version: " + getVersion() + "\n" +
-                "Java version: " + System.getProperty("java.version") + "\n" +
-                "Operating System: " + System.getProperty("os.name");
-    }
-
-    private String getStats() {
-        return getMinifiedStats() + "\n" +
-                "\n" +
-                getUptime() + "\n" +
-                "Unique messages read this session: " + chatbot.getMessageLog().size();
-    }
+    //endregion
 
     private String getUptime() {
         LocalDateTime startupTime = chatbot.getStartupTime();
@@ -82,4 +74,18 @@ public class Stats implements Module {
                 (diffMinutes > 0 ? diffMinutes + " minute" + (diffMinutes != 1 ? "s" : "") + " " : "") +
                 diffSeconds + " second" + (diffSeconds != 1 ? "s" : "") + "]";
     }
+
+    public String getMinifiedStats() {
+        return "Version: " + chatbot.getVersion() + "\n" +
+                "Java version: " + System.getProperty("java.version") + "\n" +
+                "Operating System: " + System.getProperty("os.name");
+    }
+
+    private String getStats() {
+        return getMinifiedStats() + "\n" +
+                "\n" +
+                getUptime() + "\n" +
+                "Unique messages read this session: " + chatbot.getMessageLog().size();
+    }
+
 }
