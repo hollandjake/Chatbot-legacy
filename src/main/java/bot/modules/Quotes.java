@@ -20,19 +20,19 @@ import java.util.regex.Pattern;
 import static bot.utils.CONSTANTS.ACTIONIFY;
 
 public class Quotes implements Module {
-    //Constants
+    //region Constants
     private final String QUOTE_REGEX = ACTIONIFY("quote");
     private final String GRAB_REGEX = ACTIONIFY("grab");
     private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
     private final String RELOAD_QUOTE_REGEX = ACTIONIFY("quote reload");
     private final File quoteFile;
-
     private final Chatbot chatbot;
+    //endregion
 
-    //Variables
+    //region Variables
     private JSONParser jsonParser = new JSONParser();
     private JSONArray quotesList;
-
+    //endregion
 
     public Quotes(Chatbot chatbot) {
         this.chatbot = chatbot;
@@ -40,6 +40,7 @@ public class Quotes implements Module {
         reloadQuotes();
     }
 
+    //region Overrides
     @Override
     public boolean process(Message message) throws MalformedCommandException {
         String match = getMatch(message);
@@ -91,6 +92,7 @@ public class Quotes implements Module {
     public String appendModulePath(String message) {
         return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
     }
+    //endregion
 
     private void quote() {
         if (quotesList.size() > 0) {
@@ -162,6 +164,5 @@ public class Quotes implements Module {
             e.printStackTrace();
         }
     }
-
 
 }

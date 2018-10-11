@@ -18,13 +18,18 @@ import static bot.utils.CONSTANTS.*;
 import static bot.utils.XPATHS.MESSAGE_TEXT;
 
 public class Message {
+    //region Constants
     private final Human sender;
     private final String message;
     private final Image image;
     private final Date date = new Date();
+    //endregion
 
+    //region Variables
     private boolean containsCommand = false;
+    //endregion
 
+    //region Constructors
     public Message(Human me, String message) {
         this.sender = me; //Sender is the bot
         this.message = message;
@@ -43,16 +48,6 @@ public class Message {
         this.image = image;
     }
 
-    public static Message withImageFromURL(Human me, String message, String url) {
-        try {
-            Image image = ImageIO.read(new URL(url));
-            return new Message(me, message, image);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     public Message(WebElement webElement, Chatbot chatbot) {
         this.sender = Human.getFromElement(webElement, chatbot.getPeople());
         this.image = null;
@@ -67,22 +62,21 @@ public class Message {
         this.containsCommand = chatbot.containsCommand(this);
     }
 
-    public Human getSender() {
-        return sender;
+    public static Message withImageFromURL(Human me, String message, String url) {
+        try {
+            Image image = ImageIO.read(new URL(url));
+            return new Message(me, message, image);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
+    //endregion
 
-    public String getMessage() {
-        return message;
-    }
-
-    public boolean doesContainsCommand() {
-        return containsCommand;
-    }
-
-    private synchronized void sendMessage(WebElement inputBox, String message) {
+    //region Send message
+    private void sendMessage(WebElement inputBox, String message) {
         CLIPBOARD.setContents(new StringSelection(message), null);
         inputBox.sendKeys(PASTE + Keys.ENTER);
-        notifyAll();
     }
 
     private void sendMessageWithImage(WebElement inputBox, String message, Image image) {
@@ -108,10 +102,21 @@ public class Message {
     public void sendDebugMessage(WebElement inputBox) {
         sendMessage(inputBox, toString());
     }
+    //endregion
 
-    public String toString() {
-        return (sender != null ? sender + " : " : "") + message;
+    public boolean doesContainsCommand() {
+        return containsCommand;
     }
+
+    //region Getters and Setters
+    public Human getSender() {
+        return sender;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+    //endregion
 
     public JSONObject toJSON() {
         JSONObject me = new JSONObject();
@@ -123,5 +128,9 @@ public class Message {
         }
 
         return me;
+    }
+
+    public String toString() {
+        return (sender != null ? sender + " : " : "") + message;
     }
 }

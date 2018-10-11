@@ -1,5 +1,6 @@
 package bot;
 
+import bot.modules.Commands;
 import bot.utils.Human;
 import bot.utils.Message;
 import bot.utils.Module;
@@ -16,26 +17,25 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.ResourceBundle;
 
-import static bot.utils.CONSTANTS.getVersion;
-
 public class Chatbot {
-    //Constants
+    //region Constants
+    private final String VERSION = "V0.1.0";
+    protected final HashMap<String, Module> modules = new HashMap<>();
+    protected final WebController webController;
     private final ArrayList<Message> messageLog = new ArrayList<>();
     private final ArrayList<Human> people = new ArrayList<>();
-
     private final String shutdownCode = Integer.toString(new Random().nextInt(99999));
     private final LocalDateTime startupTime = LocalDateTime.now();
-
     private final Duration messageTimeout = Duration.ofMinutes(1);
-    protected final WebController webController;
+    //endregion
 
-    //Variables
+    //region Variables
     private boolean running = true;
     private String threadId;
     private Human me;
+    //endregion
 
-    protected final HashMap<String, Module> modules = new HashMap<>();
-
+    //region Constructors
     public Chatbot(String username, String password, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages) {
         webController = new WebController(this, debugMessages);
         run(username, password, threadId, debugMode, silentMode);
@@ -120,11 +120,17 @@ public class Chatbot {
             }
         }
     }
+    //endregion
 
+    //region ForOverrides
+    @ForOverride
+    public String getVersion() {
+        return VERSION;
+    }
 
-    //Methods ready to be overwritten
     @ForOverride
     protected void loadModules() {
+        modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot"));
     }
 
     @ForOverride
@@ -136,17 +142,9 @@ public class Chatbot {
     public String appendRootPath(String path) {
         return "/" + path;
     }
+    //endregion
 
-    //Methods
-    public boolean containsCommand(Message message) {
-        for (Module module : modules.values()) {
-            if (!module.getMatch(message).equals("")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
+    //region Getters & Setters
     public ArrayList<Message> getMessageLog() {
         return messageLog;
     }
@@ -167,14 +165,6 @@ public class Chatbot {
         return people;
     }
 
-    public void sendMessage(String message) {
-        webController.sendMessage(message);
-    }
-
-    public void sendMessage(Message message) {
-        webController.sendMessage(message);
-    }
-
     public String getThreadId() {
         return threadId;
     }
@@ -182,8 +172,24 @@ public class Chatbot {
     public LocalDateTime getStartupTime() {
         return startupTime;
     }
+    //endregion
 
-    public Module getModule(String moduleName) {
-        return modules.get(moduleName);
+    //region Send Message
+    public void sendMessage(String message) {
+        webController.sendMessage(message);
+    }
+
+    public void sendMessage(Message message) {
+        webController.sendMessage(message);
+    }
+    //endregion
+
+    public boolean containsCommand(Message message) {
+        for (Module module : modules.values()) {
+            if (!module.getMatch(message).equals("")) {
+                return true;
+            }
+        }
+        return false;
     }
 }

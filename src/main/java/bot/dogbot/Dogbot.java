@@ -1,6 +1,7 @@
 package bot.dogbot;
 
 import bot.Chatbot;
+import bot.modules.Commands;
 import bot.modules.Quotes;
 import bot.modules.Stats;
 
@@ -13,7 +14,13 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Dogbot extends Chatbot {
+    private final String VERSION = "V0.1.0";
 
+    //region Overrides
+    @Override
+    public String getVersion() {
+        return VERSION;
+    }
     @Override
     public String appendRootPath(String path) {
         return "src/main/resources/versions/dogbot/" + path;
@@ -44,8 +51,11 @@ public class Dogbot extends Chatbot {
     protected void loadModules() {
         modules.put("Quotes", new Quotes(this));
         modules.put("Stats", new Stats(this));
+        modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot"));
     }
+    //endregion
 
+    //region Constructors
     public Dogbot(String username, String password, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages) {
         super(username, password, threadId, debugMode, silentMode, debugMessages);
     }
@@ -57,6 +67,7 @@ public class Dogbot extends Chatbot {
     public Dogbot(String configName, boolean debugMode, boolean silentMode, boolean debugMessages) {
         super(configName, debugMode, silentMode, debugMessages);
     }
+    //endregion
 
     public static void main(String[] args) {
         Chatbot bot;
@@ -71,11 +82,10 @@ public class Dogbot extends Chatbot {
         boolean silentMode = false;
         boolean debugMessages = false;
 
-        for (int i = 0; i < args.length; i++) {
-
+        for (String arg : args) {
             //Remove any extra quotes someone may have added
             String[] subArgs = Arrays
-                    .stream(args[i].split("="))
+                    .stream(arg.split("="))
                     .map(subArg -> subArg.replace("\"", ""))
                     .toArray(String[]::new);
 

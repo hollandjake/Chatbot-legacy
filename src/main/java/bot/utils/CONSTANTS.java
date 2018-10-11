@@ -1,39 +1,25 @@
 package bot.utils;
 
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.openqa.selenium.Keys;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
-import java.io.FileReader;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 
 public interface CONSTANTS {
+    //region Keyboard operations
     Clipboard CLIPBOARD = Toolkit.getDefaultToolkit().getSystemClipboard();
     String COPY = Keys.chord(Keys.CONTROL, "c");
     String PASTE = Keys.chord(Keys.CONTROL, "v");
+    //endregion
 
+    //region Date formats
     SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yy");
     DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
+    //endregion
 
     static String ACTIONIFY(String arg) {
         return "(?i)^!\\s*" + arg + "$";
-    }
-
-    static String getVersion() {
-        try {
-            MavenXpp3Reader reader = new MavenXpp3Reader();
-            Model model = reader.read(new FileReader("pom.xml"));
-            return "V" + model.getVersion();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        }
-        return "VERSION-NOT-FOUND";
     }
 }
