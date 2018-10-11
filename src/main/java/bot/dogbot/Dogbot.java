@@ -2,6 +2,7 @@ package bot.dogbot;
 
 import bot.Chatbot;
 import bot.modules.Commands;
+import bot.modules.Github;
 import bot.modules.Quotes;
 import bot.modules.Stats;
 
@@ -52,6 +53,7 @@ public class Dogbot extends Chatbot {
         modules.put("Quotes", new Quotes(this));
         modules.put("Stats", new Stats(this));
         modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot"));
+        modules.put("Github", new Github(this));
     }
     //endregion
 
