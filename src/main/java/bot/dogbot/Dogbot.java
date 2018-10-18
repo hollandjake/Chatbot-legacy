@@ -53,6 +53,7 @@ public class Dogbot extends Chatbot {
         modules.put("Stats", new Stats(this));
         modules.put("Github", new Github(this));
         modules.put("Ping", new Ping(this));
+        modules.put("Dog", new Dogs(this));
     }
     //endregion
 

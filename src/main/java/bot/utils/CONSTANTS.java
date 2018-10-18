@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public interface CONSTANTS {
     //region Keyboard operations
@@ -21,5 +22,9 @@ public interface CONSTANTS {
 
     static String ACTIONIFY(String arg) {
         return "(?i)^!\\s*" + arg + "$";
+    }
+
+    static <T> T GET_RANDOM(List<T> list) {
+        return list.get((int) (Math.random() * list.size()));
     }
 }
