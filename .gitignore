@@ -2,4 +2,4 @@
 target/
 
 *.iml
-src/main/resources/versions/dogbot/modules/
+src/main/resources/versions/dogbot/modules/Quotes
