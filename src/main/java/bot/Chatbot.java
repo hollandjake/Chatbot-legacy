@@ -19,7 +19,7 @@ import java.util.ResourceBundle;
 
 public class Chatbot {
     //region Constants
-    private final String VERSION = "V0.1.0";
+    private final String VERSION = "V0.11.0";
     protected final HashMap<String, Module> modules = new HashMap<>();
     protected final WebController webController;
     private final ArrayList<Message> messageLog = new ArrayList<>();
@@ -177,6 +177,14 @@ public class Chatbot {
     //region Send Message
     public void sendMessage(String message) {
         webController.sendMessage(message);
+    }
+
+    public void sendImageWithMessage(String image, String message) {
+        webController.sendImageWithMessage(image, message);
+    }
+
+    public void sendImageFromURLWithMessage(String url, String message) {
+        webController.sendImageFromURLWithMessage(url, message);
     }
 
     public void sendMessage(Message message) {
