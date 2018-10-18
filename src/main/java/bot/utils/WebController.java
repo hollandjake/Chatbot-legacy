@@ -57,7 +57,9 @@ public class WebController {
     }
 
     public void quit() {
+        sendMessage("I'm off to sleep now, see you soon!");
         webDriver.quit();
+        System.exit(0);
     }
 
     //region Login
@@ -81,6 +83,7 @@ public class WebController {
 
     //region Sending messages
     public void sendMessage(Message message) {
+        int myMessageCount = getNumberOfMyMessagesDisplayed();
         WebElement inputBox = selectInputBox();
         if (debugMessages) {
             message.sendDebugMessage(inputBox);
@@ -89,7 +92,7 @@ public class WebController {
         }
         //Wait for message to be sent
         wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.xpath(MESSAGES_MINE),
-                getNumberOfMyMessagesDisplayed()));
+                myMessageCount));
     }
 
     public void sendMessage(String message) {

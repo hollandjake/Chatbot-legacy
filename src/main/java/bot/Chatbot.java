@@ -1,6 +1,7 @@
 package bot;
 
 import bot.modules.Commands;
+import bot.modules.Shutdown;
 import bot.utils.Human;
 import bot.utils.Message;
 import bot.utils.Module;
@@ -19,7 +20,7 @@ import java.util.ResourceBundle;
 
 public class Chatbot {
     //region Constants
-    private final String VERSION = "V0.11.0";
+    private final String VERSION = "V0.13.0";
     protected final HashMap<String, Module> modules = new HashMap<>();
     protected final WebController webController;
     private final ArrayList<Message> messageLog = new ArrayList<>();
@@ -130,6 +131,7 @@ public class Chatbot {
 
     @ForOverride
     protected void loadModules() {
+        modules.put("Shutdown", new Shutdown(this));
         modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot"));
     }
 
@@ -172,6 +174,10 @@ public class Chatbot {
     public LocalDateTime getStartupTime() {
         return startupTime;
     }
+
+    public String getShutdownCode() {
+        return shutdownCode;
+    }
     //endregion
 
     //region Send Message
@@ -199,5 +205,9 @@ public class Chatbot {
             }
         }
         return false;
+    }
+
+    public void quit() {
+        webController.quit();
     }
 }

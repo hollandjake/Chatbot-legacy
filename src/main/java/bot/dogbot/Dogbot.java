@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Dogbot extends Chatbot {
-    private final String VERSION = "V0.11.0";
+    private final String VERSION = "V0.13.0";
 
     //region Overrides
     @Override
@@ -47,9 +47,10 @@ public class Dogbot extends Chatbot {
 
     @Override
     protected void loadModules() {
+        super.loadModules();
+        modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot"));
         modules.put("Quotes", new Quotes(this));
         modules.put("Stats", new Stats(this));
-        modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot"));
         modules.put("Github", new Github(this));
         modules.put("Ping", new Ping(this));
     }
