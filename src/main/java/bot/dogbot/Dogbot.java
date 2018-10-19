@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Dogbot extends Chatbot {
-    private final String VERSION = "V0.13.0";
+    private final String VERSION = "V0.15.0";
 
     //region Overrides
     @Override
