@@ -1,7 +1,6 @@
 package bot.modules;
 
 import bot.Chatbot;
-import bot.utils.CONSTANTS;
 import bot.utils.Message;
 import bot.utils.Module;
 import bot.utils.exceptions.MalformedCommandException;
@@ -19,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static bot.utils.CONSTANTS.ACTIONIFY;
+import static bot.utils.CONSTANTS.GET_RANDOM;
 
 public class Quotes implements Module {
     //region Constants
@@ -97,7 +97,7 @@ public class Quotes implements Module {
 
     private void quote() {
         if (quotesList.size() > 0) {
-            JSONObject quote = (JSONObject) CONSTANTS.GET_RANDOM(quotesList);
+            JSONObject quote = (JSONObject) GET_RANDOM(quotesList);
             JSONObject sender = (JSONObject) quote.get("sender");
             chatbot.sendMessage("\"" + quote.get("message") + "\" - " + sender.get("name") + " [" + quote.get("timestamp") + "]");
         } else {
