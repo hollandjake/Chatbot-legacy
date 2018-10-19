@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.ForOverride;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.ResourceBundle;
 
 public class Chatbot {
     //region Constants
-    private final String VERSION = "V0.13.0";
+    private final String VERSION = "V0.14.0";
     protected final HashMap<String, Module> modules = new HashMap<>();
     protected final WebController webController;
     private final ArrayList<Message> messageLog = new ArrayList<>();
@@ -187,6 +188,10 @@ public class Chatbot {
 
     public void sendImageWithMessage(String image, String message) {
         webController.sendImageWithMessage(image, message);
+    }
+
+    public void sendImageWithMessage(Image image, String message) {
+        webController.sendMessage(new Message(me, message, image));
     }
 
     public void sendImageFromURLWithMessage(String url, String message) {

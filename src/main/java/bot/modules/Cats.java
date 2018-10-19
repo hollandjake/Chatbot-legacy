@@ -16,29 +16,24 @@ import static bot.utils.CONSTANTS.ACTIONIFY;
 import static bot.utils.CONSTANTS.GET_RANDOM;
 import static bot.utils.Reddit.loadSubreddits;
 
-public class Dogs implements Module {
+public class Cats implements Module {
     //region Constants
-    private final String DOG_REGEX = ACTIONIFY("dog");
-    private final String DOGGO_REGEX = ACTIONIFY("doggo");
-    private final String EXTRA_GOOD_DOG_REGEX = ACTIONIFY("extragooddog");
+    private final String CAT_REGEX = ACTIONIFY("cat");
     private final Chatbot chatbot;
     //endregion
 
     //region Variables
     private List<String> subreddits;
     private List<String> responses;
-
-    private List<String> extraGoodDogImages;
     //endregion
 
-    public Dogs(Chatbot chatbot) {
+    public Cats(Chatbot chatbot) {
         this.chatbot = chatbot;
         subreddits = loadSubreddits(new File(appendModulePath("subreddits.txt")));
         try {
             responses = Files.readAllLines(Paths.get(appendModulePath("responses.txt")));
-            extraGoodDogImages = Files.readAllLines(Paths.get(appendModulePath("extraGoodDogs.txt")));
         } catch (IOException e) {
-            System.out.println("Dog quotes/images are not available this session");
+            System.out.println("Cat quotes are not available this session");
         }
     }
 
@@ -47,14 +42,10 @@ public class Dogs implements Module {
     @SuppressWarnings("Duplicates")
     public boolean process(Message message) {
         String match = getMatch(message);
-        if (match.equals(DOG_REGEX) || match.equals(DOGGO_REGEX)) {
+        if (match.equals(CAT_REGEX)) {
             Image image = Reddit.getSubredditPicture(subreddits);
             String quote = GET_RANDOM(responses);
             chatbot.sendImageWithMessage(image, quote);
-            return true;
-        } else if (match.equals(EXTRA_GOOD_DOG_REGEX)) {
-            String imageURL = GET_RANDOM(extraGoodDogImages);
-            chatbot.sendImageFromURLWithMessage(imageURL, "Woof!");
             return true;
         } else {
             return false;
@@ -65,12 +56,8 @@ public class Dogs implements Module {
     @SuppressWarnings("Duplicates")
     public String getMatch(Message message) {
         String messageBody = message.getMessage();
-        if (messageBody.matches(DOG_REGEX)) {
-            return DOG_REGEX;
-        } else if (messageBody.matches(DOGGO_REGEX)) {
-            return DOGGO_REGEX;
-        } else if (messageBody.matches(EXTRA_GOOD_DOG_REGEX)) {
-            return EXTRA_GOOD_DOG_REGEX;
+        if (messageBody.matches(CAT_REGEX)) {
+            return CAT_REGEX;
         } else {
             return "";
         }
