@@ -1,5 +1,7 @@
 package bot.utils;
 
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import org.openqa.selenium.Keys;
 
 import java.awt.*;
@@ -30,5 +32,15 @@ public interface CONSTANTS {
 
     static <T> T GET_RANDOM(List<T> list) {
         return list.get((int) (Math.random() * list.size()));
+    }
+
+    static String GET_PAGE_SOURCE(String url) {
+        try {
+            return Unirest.get(url).header("User-agent", "Dogbot Reborn").asString().getBody();
+        } catch (UnirestException e) {
+            System.out.println("Page doesn't exist");
+            e.printStackTrace();
+            return "";
+        }
     }
 }

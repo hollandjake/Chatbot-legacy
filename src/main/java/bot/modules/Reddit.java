@@ -4,8 +4,6 @@ import bot.Chatbot;
 import bot.utils.Message;
 import bot.utils.Module;
 import bot.utils.RedditModule;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -95,10 +93,7 @@ public class Reddit implements Module {
             String redditPath = "https://www.reddit.com/r/" + subreddit + "/random.json";
 
             try {
-                String data = Unirest.get(redditPath)
-                        .header("User-agent", "Dogbot Reborn")
-                        .asString()
-                        .getBody();
+                String data = GET_PAGE_SOURCE(redditPath);
                 Matcher matcher = Pattern.compile("https://i\\.redd\\.it/\\S+?\\.jpg").matcher(data);
                 if (matcher.find()) {
                     BufferedImage image = ImageIO.read(new URL(matcher.group()));
@@ -107,8 +102,6 @@ public class Reddit implements Module {
                         return image;
                     }
                 }
-            } catch (UnirestException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }

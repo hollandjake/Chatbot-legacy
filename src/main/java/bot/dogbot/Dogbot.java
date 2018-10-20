@@ -59,6 +59,7 @@ public class Dogbot extends Chatbot {
         modules.put("Birds", new Birds(this));
         modules.put("Reddit", new Reddit(this));
         modules.put("Reacts", new Reacts(this));
+        modules.put("XKCD", new XKCD(this));
     }
     //endregion
 
