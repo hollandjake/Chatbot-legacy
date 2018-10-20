@@ -16,10 +16,6 @@ public class Trello implements Module {
     private final Chatbot chatbot;
     //endregion
 
-    //region Variables
-    int highestNumber;
-    //endregion
-
     public Trello(Chatbot chatbot) {
         this.chatbot = chatbot;
     }
