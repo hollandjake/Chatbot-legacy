@@ -4,7 +4,10 @@ import bot.Chatbot;
 import bot.utils.Message;
 import bot.utils.Module;
 
+import java.util.ArrayList;
+
 import static bot.utils.CONSTANTS.ACTIONIFY;
+import static bot.utils.CONSTANTS.DEACTIONIFY;
 
 public class Ping implements Module {
     //region Constants
@@ -42,6 +45,14 @@ public class Ping implements Module {
         } else {
             return "";
         }
+    }
+
+    @Override
+    @SuppressWarnings("Duplicates")
+    public ArrayList<String> getCommands() {
+        ArrayList<String> commands = new ArrayList<>();
+        commands.add(DEACTIONIFY(PING_REGEX));
+        return commands;
     }
 
     @Override

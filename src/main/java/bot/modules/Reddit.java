@@ -1,5 +1,9 @@
-package bot.utils;
+package bot.modules;
 
+import bot.Chatbot;
+import bot.utils.Message;
+import bot.utils.Module;
+import bot.utils.RedditModule;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
@@ -12,14 +16,76 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static bot.utils.CONSTANTS.GET_RANDOM;
+import static bot.utils.CONSTANTS.*;
 
-public class Reddit {
+public class Reddit implements Module {
+    //region Constants
+    private final String REDDITS_REGEX = ACTIONIFY("reddits");
+    private final Chatbot chatbot;
+    //endregion
+
+    public Reddit(Chatbot chatbot) {
+        this.chatbot = chatbot;
+    }
+
+    //region Overrides
+    @Override
+    @SuppressWarnings("Duplicates")
+    public boolean process(Message message) {
+        String match = getMatch(message);
+        if (match.equals(REDDITS_REGEX)) {
+            String text = "";
+            HashMap modules = chatbot.getModules();
+            text += "Dogs: \n";
+            for (String subreddit : ((RedditModule) modules.get("Dogs")).getSubreddits()) {
+                text += "\t" + subreddit + "\n";
+            }
+            text += "\nCats: \n";
+            for (String subreddit : ((RedditModule) modules.get("Cats")).getSubreddits()) {
+                text += "\t" + subreddit + "\n";
+            }
+            text += "\nBirds: \n";
+            for (String subreddit : ((RedditModule) modules.get("Birds")).getSubreddits()) {
+                text += "\t" + subreddit + "\n";
+            }
+            chatbot.sendMessage(text);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    @SuppressWarnings("Duplicates")
+    public String getMatch(Message message) {
+        String messageBody = message.getMessage();
+        if (messageBody.matches(REDDITS_REGEX)) {
+            return REDDITS_REGEX;
+        } else {
+            return "";
+        }
+    }
+
+    @Override
+    @SuppressWarnings("Duplicates")
+    public ArrayList<String> getCommands() {
+        ArrayList<String> commands = new ArrayList<>();
+        commands.add(DEACTIONIFY(REDDITS_REGEX));
+        return commands;
+    }
+
+    @Override
+    public String appendModulePath(String message) {
+        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
+    }
+    //endregion
+
     public static Image getSubredditPicture(List<String> subreddits) {
         while (subreddits != null) {
             //Pick subreddit
@@ -30,8 +96,8 @@ public class Reddit {
 
             try {
                 String data = Unirest.get(redditPath)
-                                .header("User-agent", "Dogbot Reborn")
-                                .asString()
+                        .header("User-agent", "Dogbot Reborn")
+                        .asString()
                         .getBody();
                 Matcher matcher = Pattern.compile("https://i\\.redd\\.it/\\S+?\\.jpg").matcher(data);
                 if (matcher.find()) {

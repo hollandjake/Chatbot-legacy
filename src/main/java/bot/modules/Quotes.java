@@ -17,8 +17,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static bot.utils.CONSTANTS.ACTIONIFY;
-import static bot.utils.CONSTANTS.GET_RANDOM;
+import static bot.utils.CONSTANTS.*;
 
 public class Quotes implements Module {
     //region Constants
@@ -87,6 +86,17 @@ public class Quotes implements Module {
         } else {
             return "";
         }
+    }
+
+    @Override
+    @SuppressWarnings("Duplicates")
+    public ArrayList<String> getCommands() {
+        ArrayList<String> commands = new ArrayList<>();
+        commands.add(DEACTIONIFY(QUOTE_REGEX));
+        commands.add(DEACTIONIFY(GRAB_REGEX));
+        commands.add(DEACTIONIFY(GRAB_OFFSET_REGEX));
+        commands.add(DEACTIONIFY(RELOAD_QUOTE_REGEX));
+        return commands;
     }
 
     @Override

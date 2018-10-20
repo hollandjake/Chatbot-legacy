@@ -2,21 +2,20 @@ package bot.modules;
 
 import bot.Chatbot;
 import bot.utils.Message;
-import bot.utils.Module;
-import bot.utils.Reddit;
+import bot.utils.RedditModule;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
-import static bot.utils.CONSTANTS.ACTIONIFY;
-import static bot.utils.CONSTANTS.GET_RANDOM;
-import static bot.utils.Reddit.loadSubreddits;
+import static bot.modules.Reddit.loadSubreddits;
+import static bot.utils.CONSTANTS.*;
 
-public class Dogs implements Module {
+public class Dogs implements RedditModule {
     //region Constants
     private final String DOG_REGEX = ACTIONIFY("dog");
     private final String DOGGO_REGEX = ACTIONIFY("doggo");
@@ -77,8 +76,23 @@ public class Dogs implements Module {
     }
 
     @Override
+    @SuppressWarnings("Duplicates")
+    public ArrayList<String> getCommands() {
+        ArrayList<String> commands = new ArrayList<>();
+        commands.add(DEACTIONIFY(DOG_REGEX));
+        commands.add(DEACTIONIFY(DOGGO_REGEX));
+        commands.add(DEACTIONIFY(EXTRA_GOOD_DOG_REGEX));
+        return commands;
+    }
+
+    @Override
     public String appendModulePath(String message) {
         return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
+    }
+
+    @Override
+    public List<String> getSubreddits() {
+        return subreddits;
     }
     //endregion
 }
