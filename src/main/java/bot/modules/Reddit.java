@@ -40,9 +40,9 @@ public class Reddit implements Module {
     public boolean process(Message message) {
         String match = getMatch(message);
         if (match.equals(REDDITS_REGEX)) {
-            String text = "";
+            String text = "Reddits currently in use\n";
             HashMap modules = chatbot.getModules();
-            text += "Dogs: \n";
+            text += "\nDogs: \n";
             for (String subreddit : ((RedditModule) modules.get("Dogs")).getSubreddits()) {
                 text += "\t" + subreddit + "\n";
             }

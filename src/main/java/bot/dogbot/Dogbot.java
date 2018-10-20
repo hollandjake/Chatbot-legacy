@@ -12,13 +12,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Dogbot extends Chatbot {
-    private final String VERSION = "V0.18.0";
+    private final String VERSION = "V0.19.0";
 
     //region Overrides
     @Override
     public String getVersion() {
         return VERSION;
     }
+
     @Override
     public String appendRootPath(String path) {
         return "src/main/resources/versions/dogbot/" + path;
@@ -57,6 +58,7 @@ public class Dogbot extends Chatbot {
         modules.put("Cats", new Cats(this));
         modules.put("Birds", new Birds(this));
         modules.put("Reddit", new Reddit(this));
+        modules.put("Reacts", new Reacts(this));
     }
     //endregion
 
