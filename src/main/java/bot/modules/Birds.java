@@ -80,8 +80,12 @@ public class Birds implements RedditModule {
     }
 
     @Override
-    public List<String> getSubreddits() {
-        return subreddits;
+    public String toString() {
+        String message = getClass().getSimpleName() + ": \n";
+        for (String subreddit : subreddits) {
+            message += "\t" + subreddit + "\n";
+        }
+        return message;
     }
     //endregion
 }

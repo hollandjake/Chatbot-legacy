@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Dogbot extends Chatbot {
-    private final String VERSION = "V0.25.0";
+    private final String VERSION = "V0.26.0";
 
     //region Overrides
     @Override
@@ -49,22 +49,19 @@ public class Dogbot extends Chatbot {
     @Override
     protected void loadModules() {
         super.loadModules();
-        modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot"));
+        modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot/README.md"));
         modules.put("Quotes", new Quotes(this));
-        modules.put("Stats", new Stats(this));
-        modules.put("Github", new Github(this));
-        modules.put("Ping", new Ping(this));
+        modules.put("Trello", new Trello(this, "https://trello.com/b/9f49WSW0/second-year-compsci"));
+        modules.put("Reddit", new Reddit(this));
         modules.put("Dogs", new Dogs(this));
         modules.put("Cats", new Cats(this));
         modules.put("Birds", new Birds(this));
-        modules.put("Reddit", new Reddit(this));
         modules.put("Reacts", new Reacts(this));
         modules.put("XKCD", new XKCD(this));
         modules.put("Inspire", new Inspire(this));
         modules.put("Roll", new Roll(this));
         modules.put("8Ball", new EightBall(this));
         modules.put("Tab", new Tab(this));
-        modules.put("Trello", new Trello(this));
         modules.put("Think", new Think(this));
     }
     //endregion
