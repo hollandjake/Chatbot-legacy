@@ -16,6 +16,7 @@ import java.util.Date;
 
 import static bot.utils.CONSTANTS.*;
 import static bot.utils.XPATHS.MESSAGE_TEXT;
+import static org.apache.commons.lang.StringEscapeUtils.unescapeHtml;
 
 public class Message {
     //region Constants
@@ -32,19 +33,19 @@ public class Message {
     //region Constructors
     public Message(Human me, String message) {
         this.sender = me; //Sender is the bot
-        this.message = message;
+        this.message = unescapeHtml(message);
         this.image = null;
     }
 
     public Message(Human me, String message, String image) {
         this.sender = me; //Sender is the bot
-        this.message = message;
+        this.message = unescapeHtml(message);
         this.image = new ImageIcon(image).getImage();
     }
 
     public Message(Human me, String message, Image image) {
         this.sender = me; //Sender is the bot
-        this.message = message;
+        this.message = unescapeHtml(message);
         this.image = image;
     }
 
@@ -75,7 +76,7 @@ public class Message {
 
     //region Send message
     private void sendMessage(WebElement inputBox, String message) {
-        CLIPBOARD.setContents(new StringSelection(message), null);
+        CLIPBOARD.setContents(new StringSelection(unescapeHtml(message)), null);
         inputBox.sendKeys(PASTE + Keys.ENTER);
     }
 
@@ -84,7 +85,7 @@ public class Message {
         inputBox.sendKeys(PASTE);
 
         if (!message.isEmpty()) {
-            CLIPBOARD.setContents(new StringSelection(message), null);
+            CLIPBOARD.setContents(new StringSelection(unescapeHtml(message)), null);
             inputBox.sendKeys(PASTE);
         }
 
