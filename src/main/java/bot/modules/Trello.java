@@ -12,12 +12,13 @@ import static bot.utils.CONSTANTS.DEACTIONIFY;
 public class Trello implements Module {
     //region Constants
     private final String TRELLO_REGEX = ACTIONIFY("trello");
-    private final String trelloLink = "https://trello.com/b/9f49WSW0/second-year-compsci";
+    private final String trelloLink;
     private final Chatbot chatbot;
     //endregion
 
-    public Trello(Chatbot chatbot) {
+    public Trello(Chatbot chatbot, String trelloLink) {
         this.chatbot = chatbot;
+        this.trelloLink = trelloLink;
     }
 
     //region Overrides

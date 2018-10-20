@@ -39,18 +39,11 @@ public class Reddit implements Module {
         String match = getMatch(message);
         if (match.equals(REDDITS_REGEX)) {
             String text = "Reddits currently in use\n";
-            HashMap modules = chatbot.getModules();
-            text += "\nDogs: \n";
-            for (String subreddit : ((RedditModule) modules.get("Dogs")).getSubreddits()) {
-                text += "\t" + subreddit + "\n";
-            }
-            text += "\nCats: \n";
-            for (String subreddit : ((RedditModule) modules.get("Cats")).getSubreddits()) {
-                text += "\t" + subreddit + "\n";
-            }
-            text += "\nBirds: \n";
-            for (String subreddit : ((RedditModule) modules.get("Birds")).getSubreddits()) {
-                text += "\t" + subreddit + "\n";
+            HashMap<String, Module> modules = chatbot.getModules();
+            for (Module module : modules.values()) {
+                if (module.getClass().isInstance(RedditModule.class)) {
+                    text += "\n" + module.toString();
+                }
             }
             chatbot.sendMessage(text);
             return true;
