@@ -6,10 +6,10 @@ import bot.utils.Module;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static bot.utils.CONSTANTS.ACTIONIFY;
-import static bot.utils.CONSTANTS.DATE_TIME_FORMATTER;
+import static bot.utils.CONSTANTS.*;
 
 public class Stats implements Module {
     //region Constants
@@ -51,6 +51,16 @@ public class Stats implements Module {
         } else {
             return "";
         }
+    }
+
+    @Override
+    @SuppressWarnings("Duplicates")
+    public ArrayList<String> getCommands() {
+        ArrayList<String> commands = new ArrayList<>();
+        commands.add(DEACTIONIFY(STATS_REGEX));
+        commands.add(DEACTIONIFY(UPTIME_REGEX));
+        commands.add(DEACTIONIFY(PUPTIME_REGEX));
+        return commands;
     }
 
     @Override

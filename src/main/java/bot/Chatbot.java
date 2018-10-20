@@ -21,7 +21,7 @@ import java.util.ResourceBundle;
 
 public class Chatbot {
     //region Constants
-    private final String VERSION = "V0.14.0";
+    private final String VERSION = "V0.15.0";
     protected final HashMap<String, Module> modules = new HashMap<>();
     protected final WebController webController;
     private final ArrayList<Message> messageLog = new ArrayList<>();
@@ -170,6 +170,10 @@ public class Chatbot {
 
     public String getThreadId() {
         return threadId;
+    }
+
+    public HashMap<String, Module> getModules() {
+        return modules;
     }
 
     public LocalDateTime getStartupTime() {

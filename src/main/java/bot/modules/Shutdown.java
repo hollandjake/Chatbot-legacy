@@ -5,10 +5,12 @@ import bot.utils.Message;
 import bot.utils.Module;
 import bot.utils.exceptions.MalformedCommandException;
 
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static bot.utils.CONSTANTS.ACTIONIFY;
+import static bot.utils.CONSTANTS.DEACTIONIFY;
 
 public class Shutdown implements Module {
     //region Constants
@@ -46,6 +48,14 @@ public class Shutdown implements Module {
         } else {
             return "";
         }
+    }
+
+    @Override
+    @SuppressWarnings("Duplicates")
+    public ArrayList<String> getCommands() {
+        ArrayList<String> commands = new ArrayList<>();
+        commands.add(DEACTIONIFY(SHUTDOWN_REGEX));
+        return commands;
     }
 
     @Override
