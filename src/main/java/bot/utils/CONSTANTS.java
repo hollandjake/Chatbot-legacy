@@ -26,8 +26,16 @@ public interface CONSTANTS {
         return "(?i)^!\\s*" + arg + "$";
     }
 
+    static String ACTIONIFY_CASE(String arg) {
+        return "^!\\s*" + arg + "$";
+    }
+
     static String DEACTIONIFY(String regex) {
         return regex.replaceAll("\\(\\?i\\)\\^!\\\\\\\\s\\*(\\S+?)\\$", "$1");
+    }
+
+    static String DEACTIONIFY_CASE(String regex) {
+        return regex.replaceAll("\\^!\\\\\\\\s\\*(\\S+?)\\$", "$1");
     }
 
     static <T> T GET_RANDOM(List<T> list) {
