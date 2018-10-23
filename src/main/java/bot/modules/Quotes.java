@@ -21,6 +21,7 @@ import static bot.utils.CONSTANTS.*;
 
 public class Quotes implements Module {
     //region Constants
+    private final String FULL_CAPS_QUOTE_REGEX = ACTIONIFY_CASE("QUOTE");
     private final String QUOTE_REGEX = ACTIONIFY("quote");
     private final String GRAB_REGEX = ACTIONIFY("grab");
     private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
@@ -44,9 +45,11 @@ public class Quotes implements Module {
     @Override
     public boolean process(Message message) throws MalformedCommandException {
         String match = getMatch(message);
-        if (match.equals(QUOTE_REGEX)) {
-            quote();
-
+        if (match.equals(FULL_CAPS_QUOTE_REGEX)) {
+            quote(true);
+            return true;
+        } else if (match.equals(QUOTE_REGEX)) {
+            quote(false);
             return true;
         } else if (match.equals(GRAB_REGEX)) {
             grab(message, 1);
@@ -75,7 +78,9 @@ public class Quotes implements Module {
     @SuppressWarnings("Duplicates")
     public String getMatch(Message message) {
         String messageBody = message.getMessage();
-        if (messageBody.matches(QUOTE_REGEX)) {
+        if (messageBody.matches(FULL_CAPS_QUOTE_REGEX)) {
+            return FULL_CAPS_QUOTE_REGEX;
+        } else if (messageBody.matches(QUOTE_REGEX)) {
             return QUOTE_REGEX;
         } else if (messageBody.matches(GRAB_REGEX)) {
             return GRAB_REGEX;
@@ -92,6 +97,7 @@ public class Quotes implements Module {
     @SuppressWarnings("Duplicates")
     public ArrayList<String> getCommands() {
         ArrayList<String> commands = new ArrayList<>();
+        commands.add(DEACTIONIFY_CASE(FULL_CAPS_QUOTE_REGEX));
         commands.add(DEACTIONIFY(QUOTE_REGEX));
         commands.add(DEACTIONIFY(GRAB_REGEX));
         commands.add(DEACTIONIFY(GRAB_OFFSET_REGEX));
@@ -105,11 +111,15 @@ public class Quotes implements Module {
     }
     //endregion
 
-    private void quote() {
+    private void quote(Boolean uppercase) {
         if (quotesList.size() > 0) {
             JSONObject quote = (JSONObject) GET_RANDOM(quotesList);
             JSONObject sender = (JSONObject) quote.get("sender");
-            chatbot.sendMessage("\"" + quote.get("message") + "\" - " + sender.get("name") + " [" + quote.get("timestamp") + "]");
+            String message = (String) quote.get("message");
+            if (uppercase) {
+                message = message.toUpperCase();
+            }
+            chatbot.sendMessage("\"" + message + "\" - " + sender.get("name") + " [" + quote.get("timestamp") + "]");
         } else {
             chatbot.sendMessage("There are no quotes available, why not try !grab or !grab [x] to make some");
         }

@@ -41,6 +41,7 @@ Message responses
 | `!grab` | Grabs the previous message |
 | `!grab [num]` | Grabs the message [num] behind `!grab 1` is equal to `!grab` |
 | `!quote` | Returns a random grabbed message |
+| `!QUOTE` | Returns a random grabbed message but in uppercase |
 | `!quote reload` | Reloads the quote file if external changes have been made |
 | `!reddits` | Outputs list of reddits being used |
 | `!roll` | Returns a random number between 1-6 |
