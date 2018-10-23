@@ -27,6 +27,7 @@ public class Quotes implements Module {
     private final String GRAB_REGEX = ACTIONIFY("grab");
     private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
     private final String LOCATE_REGEX = ACTIONIFY("locate (.+)");
+    private final String QUOTE_COUNT_REGEX = ACTIONIFY("quotecount (.+)");
     private final String RELOAD_QUOTE_REGEX = ACTIONIFY("quote reload");
     private final File quoteFile;
     private final Chatbot chatbot;
@@ -78,6 +79,15 @@ public class Quotes implements Module {
             chatbot.sendMessage("Quotes updated");
 
             return true;
+        } else if (match.equals(QUOTE_COUNT_REGEX)) {
+            Matcher matcher = Pattern.compile(QUOTE_COUNT_REGEX).matcher(message.getMessage());
+            if (matcher.find()) {
+                String name = matcher.group(1);
+                quoteCount(name);
+                return true;
+            } else {
+                throw new MalformedCommandException();
+            }
         } else {
             return false;
         }
@@ -97,6 +107,8 @@ public class Quotes implements Module {
             return GRAB_OFFSET_REGEX;
         } else if (messageBody.matches(LOCATE_REGEX)) {
             return LOCATE_REGEX;
+        } else if (messageBody.matches(QUOTE_COUNT_REGEX)) {
+            return QUOTE_COUNT_REGEX;
         } else if (messageBody.matches(RELOAD_QUOTE_REGEX)) {
             return RELOAD_QUOTE_REGEX;
         } else {
@@ -113,6 +125,7 @@ public class Quotes implements Module {
         commands.add(DEACTIONIFY(GRAB_REGEX));
         commands.add(DEACTIONIFY(GRAB_OFFSET_REGEX));
         commands.add(DEACTIONIFY(LOCATE_REGEX));
+        commands.add(DEACTIONIFY(QUOTE_COUNT_REGEX));
         commands.add(DEACTIONIFY(RELOAD_QUOTE_REGEX));
         return commands;
     }
@@ -135,6 +148,23 @@ public class Quotes implements Module {
         } else {
             chatbot.sendMessage("There are no quotes available, why not try !grab or !grab [x] to make some");
         }
+    }
+
+    private void quoteCount(String query) {
+        int count = 0;
+        for (Object q : quotesList) {
+            JSONObject quote = (JSONObject) q;
+            JSONObject sender = (JSONObject) quote.get("sender");
+            String fullname = sender.get("name").toString();
+            String nickname = sender.get("nickname").toString();
+            String qry = query.toLowerCase();
+            if (fullname.toLowerCase().contains(qry) || nickname.toLowerCase().contains(qry)) {
+                query = fullname;
+                count++;
+            }
+        }
+
+        chatbot.sendMessage("\"" + query + "\" has " + count + " quotes!" + (count > 0 ? " :O" : " :'("));
     }
 
     private void grab(Message commandMessage, int offset) {
