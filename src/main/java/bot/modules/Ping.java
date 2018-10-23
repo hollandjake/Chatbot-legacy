@@ -25,7 +25,7 @@ public class Ping implements Module {
     public boolean process(Message message) {
         String match = getMatch(message);
         if (match.equals(PING_REGEX)) {
-            if (Math.random() < 0.1) {
+            if (Math.random() < 0.3) {
                 chatbot.sendImageFromURLWithMessage("https://www.rightthisminute.com/sites/default/files/styles/twitter_card/public/videos/images/munchkin-teddy-bear-dog-ping-pong-video.jpg?itok=ajJWbxY6", "Pong! \uD83C\uDFD3");
             } else {
                 chatbot.sendMessage("Pong! \uD83C\uDFD3");
