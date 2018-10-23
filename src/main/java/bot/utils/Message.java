@@ -13,6 +13,7 @@ import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
+import java.util.Objects;
 
 import static bot.utils.CONSTANTS.*;
 import static bot.utils.XPATHS.MESSAGE_TEXT;
@@ -133,5 +134,16 @@ public class Message {
 
     public String toString() {
         return (sender != null ? sender + " : " : "") + message;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Message otherMessage = (Message) o;
+        return Objects.equals(sender, otherMessage.sender) &&
+                Objects.equals(message, otherMessage.message) &&
+                Objects.equals(image, otherMessage.image) &&
+                Objects.equals(date, otherMessage.date);
     }
 }

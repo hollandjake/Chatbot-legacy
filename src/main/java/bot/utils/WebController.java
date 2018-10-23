@@ -52,7 +52,7 @@ public class WebController {
         keyboard = new Actions(webDriver);
 
         //Setup waits
-        wait = new WebDriverWait(webDriver, 5);
+        wait = new WebDriverWait(webDriver, 10);
         messageWait = new WebDriverWait(webDriver, chatbot.getMessageTimeout().getSeconds());
     }
 
