@@ -9,6 +9,7 @@ import java.awt.datatransfer.Clipboard;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
 
 public interface CONSTANTS {
     //region Keyboard operations
@@ -21,6 +22,8 @@ public interface CONSTANTS {
     SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yy");
     DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
     //endregion
+
+    Random RANDOM = new Random();
 
     static String ACTIONIFY(String arg) {
         return "(?i)^!\\s*" + arg + "$";
@@ -39,7 +42,7 @@ public interface CONSTANTS {
     }
 
     static <T> T GET_RANDOM(List<T> list) {
-        return list.get((int) (Math.random() * list.size()));
+        return list.get(RANDOM.nextInt(list.size()));
     }
 
     static String GET_PAGE_SOURCE(String url) {
