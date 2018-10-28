@@ -1,5 +1,5 @@
 .idea/
 target/
+src/errors/
 
 *.iml
-src/main/resources/versions/dogbot/modules/Quotes

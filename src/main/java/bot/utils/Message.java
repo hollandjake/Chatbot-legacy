@@ -7,15 +7,20 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import static bot.utils.CONSTANTS.*;
+import static bot.utils.XPATHS.MESSAGE_IMAGE;
 import static bot.utils.XPATHS.MESSAGE_TEXT;
 import static org.apache.commons.lang.StringEscapeUtils.unescapeHtml;
 
@@ -51,29 +56,52 @@ public class Message {
     }
 
     public Message(WebElement webElement, Chatbot chatbot) {
-        this.sender = Human.getFromElement(webElement, chatbot.getPeople());
-        this.image = null;
-
-        WebElement messageBody = webElement.findElement(By.xpath(MESSAGE_TEXT));
-        if (messageBody != null) {
-            this.message = messageBody.getAttribute("body");
-        } else {
+        List<WebElement> imageElements = webElement.findElements(By.xpath(MESSAGE_IMAGE));
+        if (imageElements.size() > 0) {
+            String href = imageElements.get(0).getAttribute("src");
+            this.image = imageFromUrl(href);
+            this.sender = null;
             this.message = "";
-        }
+        } else {
+            this.image = null;
+            this.sender = Human.getFromElement(webElement, chatbot.getPeople());
 
+            List<WebElement> messageBodies = webElement.findElements(By.xpath(MESSAGE_TEXT));
+            if (messageBodies.size() > 0) {
+                this.message = messageBodies.get(0).getAttribute("aria-label");
+            } else {
+                this.message = "";
+            }
+
+        }
         this.containsCommand = chatbot.containsCommand(this);
     }
 
     public static Message withImageFromURL(Human me, String message, String url) {
-        try {
-            Image image = ImageIO.read(new URL(url));
+        Image image = imageFromUrl(url);
+        if (image != null) {
             return new Message(me, message, image);
+        } else {
+            return null;
+        }
+    }
+    //endregion
+
+    private static Image imageFromUrl(String url) {
+        try {
+            URL U = new URL(url);
+//            BufferedImage image = ImageIO.read(U);
+
+            URLConnection urlConnection = U.openConnection();
+            urlConnection.connect();
+            ImageInputStream imageInputStream = ImageIO.createImageInputStream(urlConnection.getInputStream());
+            BufferedImage image = ImageIO.read(imageInputStream);
+            return image;
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
     }
-    //endregion
 
     //region Send message
     private void sendMessage(WebElement inputBox, String message) {
@@ -84,12 +112,10 @@ public class Message {
     private void sendMessageWithImage(WebElement inputBox, String message, Image image) {
         CLIPBOARD.setContents(new ImageTransferable(image), null);
         inputBox.sendKeys(PASTE);
-
         if (!message.isEmpty()) {
             CLIPBOARD.setContents(new StringSelection(unescapeHtml(message)), null);
             inputBox.sendKeys(PASTE);
         }
-
         inputBox.sendKeys(Keys.ENTER);
     }
 
@@ -118,6 +144,10 @@ public class Message {
     public String getMessage() {
         return message;
     }
+
+    public Image getImage() {
+        return image;
+    }
     //endregion
 
     public JSONObject toJSON() {
@@ -133,7 +163,9 @@ public class Message {
     }
 
     public String toString() {
-        return (sender != null ? sender + " : " : "") + message;
+        return (sender != null ? sender + " : " : "") +
+                (message != null ? message + " : " : "") +
+                (image != null ? image : "");
     }
 
     @Override

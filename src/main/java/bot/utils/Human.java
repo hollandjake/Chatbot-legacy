@@ -6,42 +6,33 @@ import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static bot.utils.XPATHS.*;
+import static bot.utils.XPATHS.MESSAGE_SENDER_NICKNAME;
+import static bot.utils.XPATHS.MESSAGE_SENDER_REAL_NAME;
 
 public class Human {
     //region Constants
-    protected final String userId;
+    protected final String name;
     //endregion
 
     //region Variables
-    protected String name;
     protected String nickname;
     //endregion
 
     //region Constructors
     private Human(WebElement webElement) {
-        final Matcher matcher = Pattern.compile(".*?fbid:(\\d+).*")
-                .matcher(webElement.findElement(By.xpath(MESSAGE_SENDER_ID)).getAttribute("participants"));
-
-        userId = matcher.find() ? matcher.group(1) : null;
         nickname = webElement.findElement(By.xpath(MESSAGE_SENDER_NICKNAME)).getAttribute("aria-label");
         name = webElement.findElement(By.xpath(MESSAGE_SENDER_REAL_NAME)).getAttribute("data-tooltip-content");
     }
 
-    private Human(String userId) {
-        this.userId = userId;
+    private Human(String name) {
+        this.name = name;
     }
 
     public static Human getFromElement(WebElement webElement, ArrayList<Human> people) {
-        final Matcher matcher = Pattern.compile(".*?fbid:(\\d+).*")
-                .matcher(webElement.findElement(By.xpath(MESSAGE_SENDER_ID)).getAttribute("participants"));
-        String userId = matcher.find() ? matcher.group(1) : null;
-
+        String name = webElement.findElement(By.xpath(MESSAGE_SENDER_REAL_NAME)).getAttribute("data-tooltip-content");
         for (Human p : people) {
-            if (p.userId.equals(userId)) {
+            if (p.name.equals(name)) {
                 return p;
             }
         }
@@ -51,13 +42,12 @@ public class Human {
         return newHuman;
     }
 
-    public static Human createForBot(WebElement webElement) {
-        final Matcher matcher = Pattern.compile("\"USER_ID\":\"(\\d*)\"")
-                .matcher(webElement.getText());
+    public static Human getFromImageElement(WebElement webElement, ArrayList<Human> people) {
+        return null;
+    }
 
-        String userId = matcher.find() ? matcher.group(1) : null;
-
-        return new Human(userId);
+    public static Human createForBot(String name) {
+        return new Human(name);
     }
     //endregion
 
@@ -70,22 +60,18 @@ public class Human {
         return nickname;
     }
 
-    public String getId() {
-        return userId;
-    }
     //endregion
 
     public JSONObject toJSON() {
         JSONObject me = new JSONObject();
         me.put("name", name);
         me.put("nickname", nickname);
-        me.put("USER_ID", userId);
 
         return me;
     }
 
     public String toString() {
-        return "[" + userId + "] " + name + (nickname != null ? "(" + nickname + ")" : "");
+        return name + (nickname != null ? "(" + nickname + ")" : "");
     }
 
     @Override
@@ -93,6 +79,6 @@ public class Human {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Human human = (Human) o;
-        return Objects.equals(userId, human.userId);
+        return Objects.equals(name, human.name);
     }
 }

@@ -21,6 +21,7 @@ public interface CONSTANTS {
     //region Date formats
     SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yy");
     DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
+    DateTimeFormatter ERROR_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
     //endregion
 
     Random RANDOM = new Random();

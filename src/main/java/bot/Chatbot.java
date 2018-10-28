@@ -21,7 +21,7 @@ import java.util.ResourceBundle;
 
 public class Chatbot {
     //region Constants
-    private final String VERSION = "V1.17.0";
+    private final String VERSION = "V1.18.0";
     protected final HashMap<String, Module> modules = new HashMap<>();
     protected final WebController webController;
     private final ArrayList<Message> messageLog = new ArrayList<>();
@@ -29,6 +29,7 @@ public class Chatbot {
     private final String shutdownCode = Integer.toString(new Random().nextInt(99999));
     private final LocalDateTime startupTime = LocalDateTime.now();
     private final Duration messageTimeout = Duration.ofMinutes(1);
+    private final long refreshRate = 100;
     //endregion
 
     //region Variables
@@ -38,23 +39,23 @@ public class Chatbot {
     //endregion
 
     //region Constructors
-    public Chatbot(String username, String password, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages) {
-        webController = new WebController(this, debugMessages);
+    public Chatbot(String username, String password, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages, boolean headless, boolean maximised) {
+        webController = new WebController(this, debugMessages, headless, maximised);
         run(username, password, threadId, debugMode, silentMode);
     }
 
-    public Chatbot(String configName, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages) {
-        webController = new WebController(this, debugMessages);
+    public Chatbot(String configName, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages, boolean headless, boolean maximised) {
+        webController = new WebController(this, debugMessages, headless, maximised);
         runFromConfigWithThreadId(configName, threadId, debugMode, silentMode);
     }
 
-    public Chatbot(String configName, boolean debugMode, boolean silentMode, boolean debugMessages) {
-        webController = new WebController(this, debugMessages);
+    public Chatbot(String configName, boolean debugMode, boolean silentMode, boolean debugMessages, boolean headless, boolean maximised) {
+        webController = new WebController(this, debugMessages, headless, maximised);
         runFromConfig(configName, debugMode, silentMode);
     }
 
     public Chatbot() {
-        webController = new WebController(this, false);
+        webController = new WebController(this, false, false, false);
         runFromConfig("config", false, false);
     }
 
@@ -91,6 +92,7 @@ public class Chatbot {
         if (!silentMode) {
             initMessage();
         }
+        System.out.println("System is running");
 
         while (running) {
             try {
@@ -116,8 +118,9 @@ public class Chatbot {
                     System.out.println("No messaged received in the last " + messageTimeout);
                 }
             } catch (WebDriverException e) {
+                e.printStackTrace();
                 System.out.println("Browser was closed, program is ended");
-                webController.quit();
+                webController.quit(true);
                 System.exit(1);
             }
         }
@@ -186,6 +189,11 @@ public class Chatbot {
     public String getShutdownCode() {
         return shutdownCode;
     }
+
+    public long getRefreshRate() {
+        return refreshRate;
+    }
+
     //endregion
 
     //region Send Message
@@ -219,7 +227,11 @@ public class Chatbot {
         return false;
     }
 
+    public void screenshot() {
+        webController.screenshot();
+    }
+
     public void quit() {
-        webController.quit();
+        webController.quit(true);
     }
 }
