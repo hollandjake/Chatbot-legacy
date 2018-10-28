@@ -14,41 +14,46 @@ public interface XPATHS {
     //region Loading
     String MESSAGE_CONTAINER = "//div[@aria-label='Messages']";
 
+    String SETTINGS_COG = "//a[contains(@class,'_2fug')]";
+    String SETTINGS_DROPDOWN = "//span[text()='Settings']";
+    String SETTINGS_DONE = "//button[@class='_3quh _30yy _2t_ _5ixy']";
     /**
-     * REQUIRES <strong>post-processing to find "uid":"&lt;uid&gt;"</strong>
+     * <br><br>RETURNS -> .<strong>text</strong>
      */
-    String MY_USER_ID = "//script[starts-with(text(),'requireLazy([\"ix\"],function(ix){ix.add({\"496757\"')]";
+    String MY_REAL_NAME = "//div[@class='_6ct9']";
     //endregion
 
     //region Messages
-    String MESSAGES = "//div[div/div[contains(@class,'ui9')]]";
-    String MESSAGES_ALL = MESSAGES + "/div[contains(@class,'_o46')]";
-    String MESSAGES_OTHERS = MESSAGES + "/div[contains(@class,'_29_7')]";
+    String MESSAGE_GROUPS = "//div[@id='js_1']/div";
+    String MESSAGES_ALL = MESSAGE_GROUPS + "/div/div/div[contains(@class,'_o46')]";
+    String MESSAGES_OTHERS = MESSAGE_GROUPS + "/div/div/div[contains(@class,'_29_7')]";
     String MESSAGES_OTHERS_RECENT = "(" + MESSAGES_OTHERS + ")[last()]";
-    String MESSAGES_MINE = MESSAGES + "/div[contains(@class,'_nd_')]";
+    String MESSAGES_MINE = MESSAGE_GROUPS + "/div/div/div[contains(@class,'_nd_')]";
     String MESSAGES_MINE_RECENT = "(" + MESSAGES_MINE + ")[last()]";
 
     //region Requires MESSAGE ELEMENT
     /**
      * REQUIRES <strong>MESSAGE ELEMENT</strong>
-     * <br><br>RETURNS -> @<strong>body</strong>
+     * <br><br>RETURNS -> @<strong>src</strong>
      */
-    String MESSAGE_TEXT = "./div[@body]";
+    // //div[@id='js_1']/div/div/div/div[contains(@class,'_29_7')]/div/div/div/div/a[@href]
+    // (//div[@id='js_1']/div/div/div/div[contains(@class,'_29_7')])[last()][contains(@class,'_ylc')]
+    // //div[div/div[contains(@class,'ui9')]]/div[contains(@class,'_5z-5')] others images
+    String MESSAGE_IMAGE = "./div/div/div/div/img[@src]";
     /**
      * REQUIRES <strong>MESSAGE ELEMENT</strong>
      * <br><br>RETURNS -> @<strong>aria-label</strong>
      */
-    String MESSAGE_SENDER_NICKNAME = "./../../div/h5[@aria-label]";
+    String MESSAGE_TEXT = "./div/div[@aria-label]";
+    /**
+     * REQUIRES <strong>MESSAGE ELEMENT</strong>
+     * <br><br>RETURNS -> @<strong>aria-label</strong>
+     */
+    String MESSAGE_SENDER_NICKNAME = "./../h5[@aria-label]";
     /**
      * REQUIRES <strong>MESSAGE ELEMENT</strong>
      * <br><br>RETURNS -> @<strong>data-tooltip-content</strong>
      */
     String MESSAGE_SENDER_REAL_NAME = "./../../div/*/div[@data-tooltip-content]";
-    /**
-     * REQUIRES <strong>MESSAGE ELEMENT</strong>
-     * <br><br>RETURNS -> @<strong>participants</strong>
-     */
-    String MESSAGE_SENDER_ID = "./div[@participants]";
-    //endregion
     //endregion
 }

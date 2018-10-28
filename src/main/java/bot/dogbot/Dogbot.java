@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Dogbot extends Chatbot {
-    private final String VERSION = "V3.28.0";
+    private final String VERSION = "V3.29.0";
 
     //region Overrides
     @Override
@@ -68,16 +68,16 @@ public class Dogbot extends Chatbot {
     //endregion
 
     //region Constructors
-    public Dogbot(String username, String password, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages) {
-        super(username, password, threadId, debugMode, silentMode, debugMessages);
+    public Dogbot(String username, String password, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages, boolean headless, boolean maximised) {
+        super(username, password, threadId, debugMode, silentMode, debugMessages, headless, maximised);
     }
 
-    public Dogbot(String configName, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages) {
-        super(configName, threadId, debugMode, silentMode, debugMessages);
+    public Dogbot(String configName, String threadId, boolean debugMode, boolean silentMode, boolean debugMessages, boolean headless, boolean maximised) {
+        super(configName, threadId, debugMode, silentMode, debugMessages, headless, maximised);
     }
 
-    public Dogbot(String configName, boolean debugMode, boolean silentMode, boolean debugMessages) {
-        super(configName, debugMode, silentMode, debugMessages);
+    public Dogbot(String configName, boolean debugMode, boolean silentMode, boolean debugMessages, boolean headless, boolean maximised) {
+        super(configName, debugMode, silentMode, debugMessages, headless, maximised);
     }
     //endregion
 
@@ -93,6 +93,8 @@ public class Dogbot extends Chatbot {
         boolean debugMode = false;
         boolean silentMode = false;
         boolean debugMessages = false;
+        boolean headless = false;
+        boolean maximised = false;
 
         for (String arg : args) {
             //Remove any extra quotes someone may have added
@@ -128,17 +130,23 @@ public class Dogbot extends Chatbot {
                 case "-dms":
                     debugMessages = true;
                     break;
+                case "-headless":
+                    headless = true;
+                    break;
+                case "-maximised":
+                    maximised = true;
+                    break;
             }
         }
 
         //Create bot
         if (username != null && password != null && threadId != null) {
-            bot = new Dogbot(username, password, threadId, debugMode, silentMode, debugMessages);
+            bot = new Dogbot(username, password, threadId, debugMode, silentMode, debugMessages, headless, maximised);
         } else {
             if (threadId != null) {
-                bot = new Dogbot(configName, threadId, debugMode, silentMode, debugMessages);
+                bot = new Dogbot(configName, threadId, debugMode, silentMode, debugMessages, headless, maximised);
             } else {
-                bot = new Dogbot(configName, debugMode, silentMode, debugMessages);
+                bot = new Dogbot(configName, debugMode, silentMode, debugMessages, headless, maximised);
             }
         }
     }
