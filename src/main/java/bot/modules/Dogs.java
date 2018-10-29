@@ -26,6 +26,7 @@ public class Dogs implements RedditModule {
     //region Variables
     private List<String> subreddits;
     private List<String> responses;
+    private Image preloadedImage;
 
     private List<String> extraGoodDogImages;
     //endregion
@@ -39,6 +40,7 @@ public class Dogs implements RedditModule {
         } catch (IOException e) {
             System.out.println("Dog quotes/images are not available this session");
         }
+        preloadedImage = Reddit.getSubredditPicture(subreddits);
     }
 
     //region Overrides
@@ -47,9 +49,9 @@ public class Dogs implements RedditModule {
     public boolean process(Message message) {
         String match = getMatch(message);
         if (match.equals(DOG_REGEX) || match.equals(DOGGO_REGEX)) {
-            Image image = Reddit.getSubredditPicture(subreddits);
             String quote = GET_RANDOM(responses);
-            chatbot.sendImageWithMessage(image, quote);
+            chatbot.sendImageWithMessage(preloadedImage, quote);
+            preloadedImage = Reddit.getSubredditPicture(subreddits);
             return true;
         } else if (match.equals(EXTRA_GOOD_DOG_REGEX)) {
             String imageURL = GET_RANDOM(extraGoodDogImages);
