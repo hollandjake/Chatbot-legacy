@@ -36,9 +36,6 @@ public interface XPATHS {
      * REQUIRES <strong>MESSAGE ELEMENT</strong>
      * <br><br>RETURNS -> @<strong>src</strong>
      */
-    // //div[@id='js_1']/div/div/div/div[contains(@class,'_29_7')]/div/div/div/div/a[@href]
-    // (//div[@id='js_1']/div/div/div/div[contains(@class,'_29_7')])[last()][contains(@class,'_ylc')]
-    // //div[div/div[contains(@class,'ui9')]]/div[contains(@class,'_5z-5')] others images
     String MESSAGE_IMAGE = "./div/div/div/div/img[@src]";
     /**
      * REQUIRES <strong>MESSAGE ELEMENT</strong>
