@@ -25,6 +25,7 @@ public class Birds implements RedditModule {
     //region Variables
     private List<String> subreddits;
     private List<String> responses;
+    private Image preloadedImage;
     //endregion
 
     public Birds(Chatbot chatbot) {
@@ -35,6 +36,7 @@ public class Birds implements RedditModule {
         } catch (IOException e) {
             System.out.println("Bird quotes are not available this session");
         }
+        preloadedImage = Reddit.getSubredditPicture(subreddits);
     }
 
     //region Overrides
@@ -43,9 +45,9 @@ public class Birds implements RedditModule {
     public boolean process(Message message) {
         String match = getMatch(message);
         if (match.equals(BIRD_REGEX) || match.equals(BIRB_REGEX)) {
-            Image image = Reddit.getSubredditPicture(subreddits);
             String quote = GET_RANDOM(responses);
-            chatbot.sendImageWithMessage(image, quote);
+            chatbot.sendImageWithMessage(preloadedImage, quote);
+            preloadedImage = Reddit.getSubredditPicture(subreddits);
             return true;
         } else {
             return false;

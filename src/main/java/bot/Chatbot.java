@@ -1,7 +1,9 @@
 package bot;
 
-import bot.modules.*;
+import bot.modules.OneLinkCommand;
+import bot.modules.Ping;
 import bot.modules.Shutdown;
+import bot.modules.Stats;
 import bot.utils.Human;
 import bot.utils.Message;
 import bot.utils.Module;
@@ -14,14 +16,12 @@ import org.openqa.selenium.WebDriverException;
 import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.List;
 
 public class Chatbot {
     //region Constants
-    private final String VERSION = "V1.18.0";
+    private final String VERSION = "V1.19.0";
     protected final HashMap<String, Module> modules = new HashMap<>();
     protected final WebController webController;
     private final ArrayList<Message> messageLog = new ArrayList<>();
@@ -112,7 +112,6 @@ public class Chatbot {
                 } catch (MalformedCommandException e) {
                     sendMessage("There seems to be an issue with your command");
                 }
-
             } catch (TimeoutException e) {
                 if (debugMode) {
                     System.out.println("No messaged received in the last " + messageTimeout);
@@ -138,8 +137,14 @@ public class Chatbot {
         modules.put("Shutdown", new Shutdown(this));
         modules.put("Stats", new Stats(this));
         modules.put("Ping", new Ping(this));
-        modules.put("Github", new Github(this));
-        modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot/blob/master/README.md"));
+        modules.put("Github", new OneLinkCommand(this,
+                List.of("github"),
+                "https://github.com/hollandjake/Chatbot",
+                "Github repository"));
+        modules.put("Commands", new OneLinkCommand(this,
+                List.of("commands", "help"),
+                "https://github.com/hollandjake/Chatbot/blob/master/README.md",
+                "A list of commands can be found at"));
     }
 
     @ForOverride

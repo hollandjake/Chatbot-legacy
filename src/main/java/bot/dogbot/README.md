@@ -26,6 +26,7 @@ Image responses
 | `!cat` | Sends a picture of a cat |
 | `!dog` | Sends a picture of a dog |
 | `!extragooddog` | Send a picture of a dog from a curated list |
+| `!dab` | Sends a picture of a dabbing animal |
 | `!inspire` | Sends an inspirational quote from [InspiroBot](http://inspirobot.me) |
 | `!react` or `!reac` or `!reacc` | Gives the cats reaction |
 | `!tab` | Summons the tabulance to make things better |
@@ -37,7 +38,8 @@ Message responses
 -----------------
 | Command | Response |
 | ------- | -------- |
-| `!ask [message]` or `!8ball [message]` | Query the all knowing magic 8 ball | 
+| `!ask [message]` or `!8ball [message]` | Query the all knowing magic 8 ball |
+| `!feedback` | Sends a link to the group [Feedback form](https://docs.google.com/document/d/19Vquu0fh8LCqUXH0wwpm9H9MSq1LrEx1Z2Xg9NknKmg/edit?usp=sharing) |
 | `!grab` | Grabs the previous message |
 | `!grab [num]` | Grabs the message [num] behind `!grab 1` is equal to `!grab` |
 | `!quote` | Returns a random grabbed message |

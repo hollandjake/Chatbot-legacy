@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Dogbot extends Chatbot {
-    private final String VERSION = "V3.29.0";
+    private final String VERSION = "V3.30.0";
 
     //region Overrides
     @Override
@@ -49,21 +49,35 @@ public class Dogbot extends Chatbot {
     @Override
     protected void loadModules() {
         super.loadModules();
-        modules.put("Commands", new Commands(this, "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot/README.md"));
-        modules.put("Quotes", new Quotes(this));
-        modules.put("Trello", new Trello(this, "https://trello.com/b/9f49WSW0/second-year-compsci"));
-        modules.put("Reddit", new Reddit(this));
-        modules.put("Dogs", new Dogs(this));
-        modules.put("Cats", new Cats(this));
+        //Overrides
+        modules.put("Commands", new OneLinkCommand(this,
+                List.of("commands", "help"),
+                "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot/README.md",
+                "A list of commands can be found at"));
+        //Image responses
         modules.put("Birds", new Birds(this));
-        modules.put("Reacts", new Reacts(this));
-        modules.put("XKCD", new XKCD(this));
-        modules.put("Inspire", new Inspire(this));
-        modules.put("Roll", new Roll(this));
-        modules.put("8Ball", new EightBall(this));
-        modules.put("Tab", new Tab(this));
-        modules.put("Think", new Think(this));
+        modules.put("Cats", new Cats(this));
+        modules.put("Dogs", new Dogs(this));
         modules.put("Dab", new Dab(this));
+        modules.put("Inspire", new Inspire(this));
+        modules.put("Reacts", new Reacts(this));
+        modules.put("Tab", new Tab(this));
+        modules.put("XKCD", new XKCD(this));
+
+        //Message responses
+        modules.put("8Ball", new EightBall(this));
+        modules.put("Feedback", new OneLinkCommand(this,
+                List.of("feedback"),
+                "https://docs.google.com/document/d/19Vquu0fh8LCqUXH0wwpm9H9MSq1LrEx1Z2Xg9NknKmg/edit?usp=sharing",
+                "Feedback form"));
+        modules.put("Quotes", new Quotes(this));
+        modules.put("Reddit", new Reddit(this));
+        modules.put("Roll", new Roll(this));
+        modules.put("Think", new Think(this));
+        modules.put("Trello", new OneLinkCommand(this,
+                List.of("trello"),
+                "https://trello.com/b/9f49WSW0/second-year-compsci",
+                "Trello"));
     }
     //endregion
 

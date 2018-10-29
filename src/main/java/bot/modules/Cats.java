@@ -24,6 +24,7 @@ public class Cats implements RedditModule {
     //region Variables
     private List<String> subreddits;
     private List<String> responses;
+    private Image preloadedImage;
     //endregion
 
     public Cats(Chatbot chatbot) {
@@ -34,6 +35,7 @@ public class Cats implements RedditModule {
         } catch (IOException e) {
             System.out.println("Cat quotes are not available this session");
         }
+        preloadedImage = Reddit.getSubredditPicture(subreddits);
     }
 
     //region Overrides
@@ -42,9 +44,9 @@ public class Cats implements RedditModule {
     public boolean process(Message message) {
         String match = getMatch(message);
         if (match.equals(CAT_REGEX)) {
-            Image image = Reddit.getSubredditPicture(subreddits);
             String quote = GET_RANDOM(responses);
-            chatbot.sendImageWithMessage(image, quote);
+            chatbot.sendImageWithMessage(preloadedImage, quote);
+            preloadedImage = Reddit.getSubredditPicture(subreddits);
             return true;
         } else {
             return false;
