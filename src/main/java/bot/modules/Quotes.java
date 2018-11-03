@@ -30,12 +30,12 @@ public class Quotes implements Module {
     private final String LOCATE_REGEX = ACTIONIFY("locate (.+)");
     private final String QUOTE_COUNT_REGEX = ACTIONIFY("quotecount (.+)");
     private final String RELOAD_QUOTE_REGEX = ACTIONIFY("quote reload");
+    private final JSONParser jsonParser = new JSONParser();
     private final File quoteFile;
     private final Chatbot chatbot;
     //endregion
 
     //region Variables
-    private JSONParser jsonParser = new JSONParser();
     private JSONArray quotesList;
     //endregion
 
@@ -51,13 +51,17 @@ public class Quotes implements Module {
         String match = getMatch(message);
         if (match.equals(QUOTE_REGEX)) {
             int numUpper = 0;
+            int numLetters = 0;
             String text = message.getMessage();
             for (char c : text.toCharArray()) {
                 if (Character.isUpperCase(c)) {
                     numUpper++;
                 }
+                if (Character.isAlphabetic(c)) {
+                    numLetters++;
+                }
             }
-            if (numUpper == text.length() - 1) {
+            if (numUpper == numLetters) {
                 quote("caps");
             } else if (numUpper > 1) {
                 quote("shaky");
@@ -224,6 +228,9 @@ public class Quotes implements Module {
             return false;
         } else if (message.getSender().equals(commandMessage.getSender())) {
             chatbot.sendMessage("Did you just try and grab yourself? \uD83D\uDE20");
+            return false;
+        } else if (message.getMessage().length() == 0) {
+            chatbot.sendMessage("That message is empty");
             return false;
         }
 
