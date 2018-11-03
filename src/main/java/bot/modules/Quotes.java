@@ -23,18 +23,19 @@ import static bot.utils.CONSTANTS.*;
 public class Quotes implements Module {
     //region Constants
     private final String FULL_CAPS_QUOTE_REGEX = ACTIONIFY_CASE("QUOTE");
+    private final String SHAKEY_QUOTE_REGEX = ACTIONIFY_CASE("quote");
     private final String QUOTE_REGEX = ACTIONIFY("quote");
     private final String GRAB_REGEX = ACTIONIFY("grab");
     private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
     private final String LOCATE_REGEX = ACTIONIFY("locate (.+)");
     private final String QUOTE_COUNT_REGEX = ACTIONIFY("quotecount (.+)");
     private final String RELOAD_QUOTE_REGEX = ACTIONIFY("quote reload");
+    private final JSONParser jsonParser = new JSONParser();
     private final File quoteFile;
     private final Chatbot chatbot;
     //endregion
 
     //region Variables
-    private JSONParser jsonParser = new JSONParser();
     private JSONArray quotesList;
     //endregion
 
@@ -48,11 +49,25 @@ public class Quotes implements Module {
     @Override
     public boolean process(Message message) throws MalformedCommandException {
         String match = getMatch(message);
-        if (match.equals(FULL_CAPS_QUOTE_REGEX)) {
-            quote(true);
-            return true;
-        } else if (match.equals(QUOTE_REGEX)) {
-            quote(false);
+        if (match.equals(QUOTE_REGEX)) {
+            int numUpper = 0;
+            int numLetters = 0;
+            String text = message.getMessage();
+            for (char c : text.toCharArray()) {
+                if (Character.isUpperCase(c)) {
+                    numUpper++;
+                }
+                if (Character.isAlphabetic(c)) {
+                    numLetters++;
+                }
+            }
+            if (numUpper == numLetters) {
+                quote("caps");
+            } else if (numUpper > 1) {
+                quote("shaky");
+            } else {
+                quote("normal");
+            }
             return true;
         } else if (match.equals(GRAB_REGEX)) {
             grab(message, 1);
@@ -68,8 +83,8 @@ public class Quotes implements Module {
         } else if (match.equals(LOCATE_REGEX)) {
             Matcher matcher = Pattern.compile(LOCATE_REGEX).matcher(message.getMessage());
             if (matcher.find()) {
-                String checkMessage = matcher.group(1);
-                locate(message, checkMessage);
+                locate(message, matcher.group(1));
+
                 return true;
             } else {
                 throw new MalformedCommandException();
@@ -82,8 +97,8 @@ public class Quotes implements Module {
         } else if (match.equals(QUOTE_COUNT_REGEX)) {
             Matcher matcher = Pattern.compile(QUOTE_COUNT_REGEX).matcher(message.getMessage());
             if (matcher.find()) {
-                String name = matcher.group(1);
-                quoteCount(name);
+                quoteCount(matcher.group(1));
+
                 return true;
             } else {
                 throw new MalformedCommandException();
@@ -97,9 +112,7 @@ public class Quotes implements Module {
     @SuppressWarnings("Duplicates")
     public String getMatch(Message message) {
         String messageBody = message.getMessage();
-        if (messageBody.matches(FULL_CAPS_QUOTE_REGEX)) {
-            return FULL_CAPS_QUOTE_REGEX;
-        } else if (messageBody.matches(QUOTE_REGEX)) {
+        if (messageBody.matches(QUOTE_REGEX)) {
             return QUOTE_REGEX;
         } else if (messageBody.matches(GRAB_REGEX)) {
             return GRAB_REGEX;
@@ -121,6 +134,7 @@ public class Quotes implements Module {
     public ArrayList<String> getCommands() {
         ArrayList<String> commands = new ArrayList<>();
         commands.add(DEACTIONIFY_CASE(FULL_CAPS_QUOTE_REGEX));
+        commands.add(DEACTIONIFY_CASE(SHAKEY_QUOTE_REGEX));
         commands.add(DEACTIONIFY(QUOTE_REGEX));
         commands.add(DEACTIONIFY(GRAB_REGEX));
         commands.add(DEACTIONIFY(GRAB_OFFSET_REGEX));
@@ -136,13 +150,28 @@ public class Quotes implements Module {
     }
     //endregion
 
-    private void quote(Boolean uppercase) {
+    private void quote(String type) {
         if (quotesList.size() > 0) {
             JSONObject quote = (JSONObject) GET_RANDOM(quotesList);
             JSONObject sender = (JSONObject) quote.get("sender");
             String message = (String) quote.get("message");
-            if (uppercase) {
-                message = message.toUpperCase();
+            switch (type) {
+                case "caps":
+                    message = message.toUpperCase();
+                    break;
+                case "shaky":
+                    Boolean isCaps = false;
+                    String tempMessage = "";
+                    for (char x : message.toCharArray()) {
+                        if (Character.isAlphabetic(x)) {
+                            String c = String.valueOf(x);
+                            tempMessage += isCaps ? c.toLowerCase() : c.toUpperCase();
+                            isCaps = !isCaps;
+                        } else {
+                            tempMessage += x;
+                        }
+                    }
+                    message = tempMessage;
             }
             chatbot.sendMessage("\"" + message + "\" - " + sender.get("name") + " [" + quote.get("timestamp") + "]");
         } else {
@@ -199,6 +228,9 @@ public class Quotes implements Module {
             return false;
         } else if (message.getSender().equals(commandMessage.getSender())) {
             chatbot.sendMessage("Did you just try and grab yourself? \uD83D\uDE20");
+            return false;
+        } else if (message.getMessage().length() == 0) {
+            chatbot.sendMessage("That message is empty");
             return false;
         }
 
