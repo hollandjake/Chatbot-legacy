@@ -36,6 +36,7 @@ public class WebController {
         File driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
                 new File(classLoader.getResource("drivers/windows/chromedriver.exe").getFile()) :
                 new File(classLoader.getResource("drivers/linux/chromedriver").getFile());
+        driver.setExecutable(true);
 
         //Create service
         service = new ChromeDriverService.Builder()
