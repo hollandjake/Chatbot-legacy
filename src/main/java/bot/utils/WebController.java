@@ -87,6 +87,9 @@ public class WebController {
         webDriver.findElement(By.xpath(LOGIN_EMAIL)).sendKeys(username);
         wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(LOGIN_PASS)));
         webDriver.findElement(By.xpath(LOGIN_PASS)).sendKeys(password);
+
+        webDriver.findElement(By.xpath(COOKIES_CLOSE)).click();
+
         wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_BUTTON)));
         webDriver.findElement(By.xpath(LOGIN_BUTTON)).click();
     }

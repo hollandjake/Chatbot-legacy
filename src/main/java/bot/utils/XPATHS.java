@@ -2,6 +2,7 @@ package bot.utils;
 
 public interface XPATHS {
     //region Login
+    String COOKIES_CLOSE = "//*[@id='u_0_i']";
     String LOGIN_EMAIL = "//input[@id='email']";
     String LOGIN_PASS = "//input[@id='pass']";
     String LOGIN_BUTTON = "//button[@id='loginbutton']";
