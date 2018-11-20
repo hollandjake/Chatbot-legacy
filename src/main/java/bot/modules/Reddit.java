@@ -41,7 +41,7 @@ public class Reddit implements Module {
             String text = "Reddits currently in use\n";
             HashMap<String, Module> modules = chatbot.getModules();
             for (Module module : modules.values()) {
-                if (module.getClass().isInstance(RedditModule.class)) {
+                if (module instanceof RedditModule) {
                     text += "\n" + module.toString();
                 }
             }
