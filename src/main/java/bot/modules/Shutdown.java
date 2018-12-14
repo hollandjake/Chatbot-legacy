@@ -1,8 +1,8 @@
 package bot.modules;
 
 import bot.Chatbot;
+import bot.utils.CommandModule;
 import bot.utils.Message;
-import bot.utils.Module;
 import bot.utils.exceptions.MalformedCommandException;
 
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import static bot.utils.CONSTANTS.ACTIONIFY;
 import static bot.utils.CONSTANTS.DEACTIONIFY;
 
-public class Shutdown implements Module {
+public class Shutdown implements CommandModule {
     //region Constants
     private final String SHUTDOWN_REGEX = ACTIONIFY("shutdown (\\d*)");
     private final Chatbot chatbot;
@@ -56,11 +56,6 @@ public class Shutdown implements Module {
         ArrayList<String> commands = new ArrayList<>();
         commands.add(DEACTIONIFY(SHUTDOWN_REGEX));
         return commands;
-    }
-
-    @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
     }
 
     //endregion

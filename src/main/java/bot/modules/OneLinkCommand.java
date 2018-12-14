@@ -2,14 +2,14 @@ package bot.modules;
 
 import bot.Chatbot;
 import bot.utils.CONSTANTS;
+import bot.utils.CommandModule;
 import bot.utils.Message;
-import bot.utils.Module;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OneLinkCommand implements Module {
+public class OneLinkCommand implements CommandModule {
     //region Constants
     private final List<String> COMMAND_REGEXES;
     private final String url;
@@ -54,11 +54,6 @@ public class OneLinkCommand implements Module {
     @SuppressWarnings("Duplicates")
     public ArrayList<String> getCommands() {
         return (ArrayList<String>) COMMAND_REGEXES.stream().map(CONSTANTS::DEACTIONIFY).collect(Collectors.toList());
-    }
-
-    @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
     }
     //endregion
 }

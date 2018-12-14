@@ -1,14 +1,14 @@
 package bot.modules;
 
 import bot.Chatbot;
+import bot.utils.CommandModule;
 import bot.utils.Message;
-import bot.utils.Module;
 
 import java.util.ArrayList;
 
 import static bot.utils.CONSTANTS.*;
 
-public class Inspire implements Module {
+public class Inspire implements CommandModule {
     //region Constants
     private final String INSPIRE_REGEX = ACTIONIFY("inspire");
     private final Chatbot chatbot;
@@ -25,7 +25,7 @@ public class Inspire implements Module {
         String match = getMatch(message);
         if (match.equals(INSPIRE_REGEX)) {
             String imgURL = GET_PAGE_SOURCE("http://inspirobot.me/api?generate=true");
-            chatbot.sendImageFromURLWithMessage(imgURL, "Inspiring.");
+            chatbot.sendImageWithMessage(imgURL, "Inspiring.");
             return true;
         } else {
             return false;
@@ -49,11 +49,6 @@ public class Inspire implements Module {
         ArrayList<String> commands = new ArrayList<>();
         commands.add(DEACTIONIFY(INSPIRE_REGEX));
         return commands;
-    }
-
-    @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
     }
     //endregion
 }

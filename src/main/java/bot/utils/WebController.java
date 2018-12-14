@@ -11,23 +11,27 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import static bot.utils.XPATHS.*;
 
 public class WebController {
     //region Variables
-    private Chatbot chatbot;
+    private final Chatbot chatbot;
+    private final Database db;
     private final ChromeDriverService service;
     private final WebDriver webDriver;
     private final Actions keyboard;
     private final WebDriverWait wait;
     private final WebDriverWait messageWait;
-    private final boolean debugMessages;
+
+    private final HashMap<String, String> config;
     //endregion
 
-    public WebController(Chatbot chatbot, boolean debugMessages, boolean headless, boolean maximised) {
+    public WebController(Chatbot chatbot, HashMap<String, String> config) {
         this.chatbot = chatbot;
-        this.debugMessages = debugMessages;
+        this.config = config;
+        this.db = chatbot.getDb();
 
         ClassLoader classLoader = getClass().getClassLoader();
         File driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
@@ -35,7 +39,7 @@ public class WebController {
                 new File(classLoader.getResource("drivers/linux/chromedriver").getFile());
         driver.setExecutable(true);
 
-        //Create service
+        //region Create service
         service = new ChromeDriverService.Builder()
                 .usingDriverExecutable(driver)
                 .usingAnyFreePort()
@@ -45,21 +49,24 @@ public class WebController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        //endregion
 
-        //Setup drivers
+        //region Setup drivers
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("mute-audio", "console");
-        if (headless) {
+        if (config.containsKey("headless")) {
             chromeOptions.addArguments("headless", "window-size=1920,1080");
-        } else if (maximised) {
+        } else if (config.containsKey("maximised")) {
             chromeOptions.addArguments("start-maximized");
         }
         webDriver = new RemoteWebDriver(service.getUrl(), chromeOptions);
         keyboard = new Actions(webDriver);
+        //endregion
 
-        //Setup waits
+        //region Setup waits
         wait = new WebDriverWait(webDriver, 10);
         messageWait = new WebDriverWait(webDriver, chatbot.getMessageTimeout().getSeconds(), chatbot.getRefreshRate());
+        //endregion
 
         Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
             e.printStackTrace();
@@ -70,7 +77,7 @@ public class WebController {
 
     public void quit(boolean withMessage) {
         if (withMessage) {
-            sendMessage("I'm off to sleep now, see you soon!");
+            chatbot.sendMessage("I'm off to sleep now, see you soon!");
         }
         webDriver.quit();
         System.exit(0);
@@ -93,7 +100,8 @@ public class WebController {
     }
 
     public void gotoFacebookThread(String threadId) {
-        chatbot.setMe(Human.createForBot(getMyRealName()));
+        Human me = db.getHumanFromName(getMyRealName());
+        chatbot.setMe(me);
         webDriver.get("https://www.messenger.com/t/" + threadId);
     }
     //endregion
@@ -102,7 +110,7 @@ public class WebController {
     public void sendMessage(Message message) {
         int myMessageCount = getNumberOfMyMessagesDisplayed();
         WebElement inputBox = selectInputBox();
-        if (debugMessages) {
+        if (config.containsKey("debug-messages")) {
             message.sendDebugMessage(inputBox);
         } else {
             message.sendMessage(inputBox);
@@ -114,22 +122,6 @@ public class WebController {
 
     public void screenshot() {
         ScreenshotUtil.capture(webDriver);
-    }
-
-    public void sendMessage(String message) {
-        sendMessage(new Message(chatbot.getMe(), message));
-    }
-
-    public void sendImageWithMessage(String image, String message) {
-        sendMessage(new Message(chatbot.getMe(), message, image));
-    }
-
-    public void sendImageFromURLWithMessage(String url, String message) {
-        sendMessage(Message.withImageFromURL(chatbot.getMe(), message, url));
-    }
-
-    public void sendImage(String image) {
-        sendImageWithMessage(image, "");
     }
 
     private WebElement selectInputBox() {
@@ -150,8 +142,8 @@ public class WebController {
     public Message getLatestMessage() {
         WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
         //Move mouse over message so messenger marks it as read
-        keyboard.moveToElement(messageElement);
-        return new Message(messageElement, chatbot);
+        messageElement.click();
+        return Message.fromElement(chatbot, messageElement);
     }
 
     public int getNumberOfMessagesDisplayed() {
@@ -171,7 +163,6 @@ public class WebController {
         String name = webDriver.findElement(By.xpath(MY_REAL_NAME)).getText();
         webDriver.findElement(By.xpath(SETTINGS_DONE)).click();
         return name;
-
     }
     //endregion
 

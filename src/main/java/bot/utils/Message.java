@@ -1,104 +1,89 @@
 package bot.utils;
 
 import bot.Chatbot;
-import org.json.simple.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
-import javax.swing.*;
+import javax.net.ssl.SSLHandshakeException;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Date;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 import static bot.utils.CONSTANTS.*;
-import static bot.utils.XPATHS.MESSAGE_IMAGE;
-import static bot.utils.XPATHS.MESSAGE_TEXT;
+import static bot.utils.XPATHS.*;
 import static org.apache.commons.lang.StringEscapeUtils.unescapeHtml;
 
 public class Message {
     //region Constants
     private final Human sender;
     private final String message;
-    private final Image image;
-    private final Date date = new Date();
+    private final String imageUrl;
+    private final LocalDate date;
+    private final int id;
     //endregion
 
-    //region Variables
-    private boolean containsCommand = false;
-    //endregion
-
-    //region Constructors
-    public Message(Human me, String message) {
-        this.sender = me; //Sender is the bot
-        this.message = unescapeHtml(message);
-        this.image = null;
+    public Message(Human sender, String message, String imageUrl, LocalDate date, int id) {
+        this.sender = sender;
+        this.message = message;
+        this.imageUrl = imageUrl;
+        this.date = date;
+        this.id = id;
     }
 
-    public Message(Human me, String message, String image) {
-        this.sender = me; //Sender is the bot
-        this.message = unescapeHtml(message);
-        this.image = new ImageIcon(image).getImage();
+    public Message(Message message) {
+        this.sender = message.getSender();
+        this.message = message.getMessage();
+        this.imageUrl = message.getImageUrl();
+        this.date = message.getDate();
+        this.id = message.getId();
     }
 
-    public Message(Human me, String message, Image image) {
-        this.sender = me; //Sender is the bot
-        this.message = unescapeHtml(message);
-        this.image = image;
+    public Message(ResultSet resultSet) throws SQLException {
+        this.id = resultSet.getInt("M_ID");
+        this.sender = new Human(resultSet);
+        this.message = resultSet.getString("M_message");
+        this.imageUrl = resultSet.getString("I_url");
+        this.date = resultSet.getDate("M_date").toLocalDate();
     }
 
-    public Message(WebElement webElement, Chatbot chatbot) {
-        List<WebElement> imageElements = webElement.findElements(By.xpath(MESSAGE_IMAGE));
-        if (imageElements.size() > 0) {
-            String href = imageElements.get(0).getAttribute("src");
-            this.image = imageFromUrl(href);
-            this.sender = null;
-            this.message = "";
-        } else {
-            this.image = null;
-            this.sender = Human.getFromElement(webElement, chatbot.getPeople());
-
-            List<WebElement> messageBodies = webElement.findElements(By.xpath(MESSAGE_TEXT));
-            if (messageBodies.size() > 0) {
-                this.message = messageBodies.get(0).getAttribute("aria-label");
-            } else {
-                this.message = "";
-            }
-
-        }
-        this.containsCommand = chatbot.containsCommand(this);
-    }
-
-    public static Message withImageFromURL(Human me, String message, String url) {
-        Image image = imageFromUrl(url);
-        if (image != null) {
-            return new Message(me, message, image);
-        } else {
-            return null;
-        }
-    }
-    //endregion
-
-    private static Image imageFromUrl(String url) {
+    public static BufferedImage imageFromUrl(String url) throws SSLHandshakeException {
         try {
             URL U = new URL(url);
-//            BufferedImage image = ImageIO.read(U);
-
             URLConnection urlConnection = U.openConnection();
             urlConnection.connect();
             ImageInputStream imageInputStream = ImageIO.createImageInputStream(urlConnection.getInputStream());
             BufferedImage image = ImageIO.read(imageInputStream);
-            return image;
+            if (image == null) {
+                return null;
+            }
+            double size = urlConnection.getContentLength();
+
+            //Scale image to fit in size
+            double scaleFactor = Math.min(1, MAX_IMAGE_SIZE / size);
+            int scaledWidth = (int) (image.getWidth() * scaleFactor);
+            int scaledHeight = (int) (image.getHeight() * scaleFactor);
+            Image scaledImage = image.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
+
+            BufferedImage bufferedImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = bufferedImage.createGraphics();
+            g.drawImage(scaledImage, 0, 0, null);
+            g.dispose();
+            return bufferedImage;
         } catch (IOException e) {
             e.printStackTrace();
+            if (e instanceof SSLHandshakeException) {
+                throw (SSLHandshakeException) e;
+            }
             return null;
         }
     }
@@ -110,8 +95,10 @@ public class Message {
     }
 
     private void sendMessageWithImage(WebElement inputBox, String message, Image image) {
-        CLIPBOARD.setContents(new ImageTransferable(image), null);
-        inputBox.sendKeys(PASTE);
+        if (image != null) {
+            CLIPBOARD.setContents(new ImageTransferable(image), null);
+            inputBox.sendKeys(PASTE);
+        }
         if (!message.isEmpty()) {
             CLIPBOARD.setContents(new StringSelection(unescapeHtml(message)), null);
             inputBox.sendKeys(PASTE);
@@ -120,8 +107,12 @@ public class Message {
     }
 
     public void sendMessage(WebElement inputBox) {
-        if (image != null) {
-            sendMessageWithImage(inputBox, message, image);
+        if (imageUrl != null) {
+            try {
+                sendMessageWithImage(inputBox, message, imageFromUrl(imageUrl));
+            } catch (SSLHandshakeException e) {
+                sendMessage(inputBox, message + "\n\n" + e.getMessage() + "\uD83D\uDE2D");
+            }
         } else {
             sendMessage(inputBox, message);
         }
@@ -132,11 +123,38 @@ public class Message {
     }
     //endregion
 
-    public boolean doesContainsCommand() {
-        return containsCommand;
+    public static Message fromElement(Chatbot chatbot, WebElement webElement) {
+        String senderName = webElement.findElement(By.xpath(MESSAGE_SENDER_REAL_NAME)).getAttribute("data-tooltip-content");
+
+        String imageUrl = "";
+        String message = "";
+
+        List<WebElement> imageElements = webElement.findElements(By.xpath(MESSAGE_IMAGE));
+        List<WebElement> messageBodies = webElement.findElements(By.xpath(MESSAGE_TEXT));
+
+        if (imageElements.size() > 0) {
+            imageUrl = imageElements.get(0).getAttribute("src");
+        } else if (messageBodies.size() > 0) {
+            message = messageBodies.get(0).getAttribute("aria-label");
+        }
+        try {
+            return Message.fromResultSet(chatbot.getDb().saveMessage(senderName, chatbot.getThreadId(), message, imageUrl));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    //region Getters and Setters
+    public static Message fromResultSet(ResultSet resultSet) throws SQLException {
+        if (resultSet != null && resultSet.next()) {
+            return new Message(resultSet);
+        } else {
+            return null;
+        }
+    }
+
+    //region getters
+
     public Human getSender() {
         return sender;
     }
@@ -145,37 +163,28 @@ public class Message {
         return message;
     }
 
-    public Image getImage() {
-        return image;
+    public String getImageUrl() {
+        return imageUrl;
     }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public int getId() {
+        return id;
+    }
+
     //endregion
 
-    public JSONObject toJSON() {
-        JSONObject me = new JSONObject();
-        me.put("sender", sender.toJSON());
-        me.put("message", message);
-        me.put("timestamp", DATE_FORMATTER.format(date));
-        if (image != null) {
-            me.put("image", image);
-        }
-
-        return me;
-    }
-
-    public String toString() {
-        return (sender != null ? sender + " : " : "") +
-                (message != null ? message + " : " : "") +
-                (image != null ? image : "");
-    }
-
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Message otherMessage = (Message) o;
-        return Objects.equals(sender, otherMessage.sender) &&
-                Objects.equals(message, otherMessage.message) &&
-                Objects.equals(image, otherMessage.image) &&
-                Objects.equals(date, otherMessage.date);
+    public String toString() {
+        return "Message{" +
+                "sender=" + sender +
+                ", message='" + message + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", date=" + date +
+                ", id=" + id +
+                '}';
     }
 }

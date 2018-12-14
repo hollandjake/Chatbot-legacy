@@ -1,8 +1,8 @@
 package bot.modules;
 
 import bot.Chatbot;
+import bot.utils.CommandModule;
 import bot.utils.Message;
-import bot.utils.Module;
 import bot.utils.exceptions.MalformedCommandException;
 
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import static bot.utils.CONSTANTS.ACTIONIFY;
 import static bot.utils.CONSTANTS.DEACTIONIFY;
 
-public class Think implements Module {
+public class Think implements CommandModule {
     //region Constants
     private final String THINK_REGEX = ACTIONIFY("think");
     private final String MULTI_THINK_REGEX = ACTIONIFY("think (\\d*)");
@@ -77,11 +77,6 @@ public class Think implements Module {
         commands.add(DEACTIONIFY(MULTI_THINK_REGEX));
         commands.add(DEACTIONIFY(MULTI_THONK_REGEX));
         return commands;
-    }
-
-    @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
     }
     //endregion
 }

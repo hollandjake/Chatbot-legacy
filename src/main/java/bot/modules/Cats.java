@@ -4,38 +4,20 @@ import bot.Chatbot;
 import bot.utils.Message;
 import bot.utils.RedditModule;
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
-import static bot.modules.Reddit.loadSubreddits;
-import static bot.utils.CONSTANTS.*;
+import static bot.utils.CONSTANTS.ACTIONIFY;
+import static bot.utils.CONSTANTS.DEACTIONIFY;
 
-public class Cats implements RedditModule {
+public class Cats extends RedditModule {
     //region Constants
     private final String CAT_REGEX = ACTIONIFY("cat");
-    private final Chatbot chatbot;
-    //endregion
-
-    //region Variables
-    private List<String> subreddits;
-    private List<String> responses;
-    private Image preloadedImage;
     //endregion
 
     public Cats(Chatbot chatbot) {
-        this.chatbot = chatbot;
-        subreddits = loadSubreddits(new File(appendModulePath("subreddits.txt")));
-        try {
-            responses = Files.readAllLines(Paths.get(appendModulePath("responses.txt")));
-        } catch (IOException e) {
-            System.out.println("Cat quotes are not available this session");
-        }
-        preloadedImage = Reddit.getSubredditPicture(subreddits);
+        super(chatbot);
     }
 
     //region Overrides
@@ -44,9 +26,9 @@ public class Cats implements RedditModule {
     public boolean process(Message message) {
         String match = getMatch(message);
         if (match.equals(CAT_REGEX)) {
-            String quote = GET_RANDOM(responses);
-            chatbot.sendImageWithMessage(preloadedImage, quote);
-            preloadedImage = Reddit.getSubredditPicture(subreddits);
+            String response = getResponse();
+            String image = getImage();
+            chatbot.sendImageWithMessage(image, response);
             return true;
         } else {
             return false;
@@ -73,17 +55,19 @@ public class Cats implements RedditModule {
     }
 
     @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
-    }
+    public void prepareStatements(Connection connection) throws SQLException {
+        GET_SUBREDDITS_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   S.link as S_link " +
+                "FROM Subreddits S " +
+                "WHERE type = 'Cats'");
 
-    @Override
-    public String toString() {
-        String message = getClass().getSimpleName() + ": \n";
-        for (String subreddit : subreddits) {
-            message += "\t" + subreddit + "\n";
-        }
-        return message;
+        GET_RESPONSE_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   R.message as R_message " +
+                "FROM CatResponses R " +
+                "ORDER BY RAND() " +
+                "LIMIT 1");
     }
     //endregion
 }

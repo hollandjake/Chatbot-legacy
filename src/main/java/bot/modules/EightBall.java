@@ -1,39 +1,52 @@
 package bot.modules;
 
 import bot.Chatbot;
+import bot.utils.CommandModule;
+import bot.utils.Database;
+import bot.utils.DatabaseModule;
 import bot.utils.Message;
-import bot.utils.Module;
 import bot.utils.exceptions.MalformedCommandException;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static bot.utils.CONSTANTS.*;
+import static bot.utils.CONSTANTS.ACTIONIFY;
+import static bot.utils.CONSTANTS.DEACTIONIFY;
 
-public class EightBall implements Module {
+public class EightBall implements CommandModule, DatabaseModule {
     //region Constants
-    private final String NO_QUESTION_REGEX = ACTIONIFY("8ball|ask");
+    private final String NO_QUESTION_REGEX = ACTIONIFY("(8ball|ask)");
     private final String EIGHT_BALL_REGEX = ACTIONIFY("8ball (.*)");
     private final String ASK_REGEX = ACTIONIFY("ask (.*)");
     private final Chatbot chatbot;
+    private final Database db;
     //endregion
 
-    //region Variables
-    private List<String> responses;
+    //region Database statements
+    private PreparedStatement GET_RANDOM_RESPONSE_STMT;
     //endregion
 
     public EightBall(Chatbot chatbot) {
         this.chatbot = chatbot;
+        this.db = chatbot.getDb();
+    }
+
+    private String getResponse() {
         try {
-            responses = Files.readAllLines(Paths.get(appendModulePath("responses.txt")));
-        } catch (IOException e) {
-            System.out.println("8Ball messages are not available this session");
+            db.checkConnection();
+            ResultSet resultSet = GET_RANDOM_RESPONSE_STMT.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getString("R_message");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
     //region Overrides
@@ -47,7 +60,7 @@ public class EightBall implements Module {
         if (match.equals(EIGHT_BALL_REGEX) || match.equals(ASK_REGEX)) {
             Matcher matcher = Pattern.compile(match).matcher(message.getMessage());
             if (matcher.find() && !matcher.group(1).isEmpty()) {
-                chatbot.sendMessage(GET_RANDOM(responses));
+                chatbot.sendMessage(getResponse());
             } else {
                 throw new MalformedCommandException();
             }
@@ -82,9 +95,13 @@ public class EightBall implements Module {
     }
 
     @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
+    public void prepareStatements(Connection connection) throws SQLException {
+        GET_RANDOM_RESPONSE_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   R.message as R_message " +
+                "FROM EightBallResponses R " +
+                "ORDER BY RAND() " +
+                "LIMIT 1");
     }
-
     //endregion
 }

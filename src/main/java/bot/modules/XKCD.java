@@ -1,8 +1,8 @@
 package bot.modules;
 
 import bot.Chatbot;
+import bot.utils.CommandModule;
 import bot.utils.Message;
-import bot.utils.Module;
 import bot.utils.exceptions.MalformedCommandException;
 import org.json.JSONObject;
 
@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 import static bot.utils.CONSTANTS.*;
 
-public class XKCD implements Module {
+public class XKCD implements CommandModule {
     //region Constants
     private final String XKCD_REGEX = ACTIONIFY("xkcd");
     private final String LATEST_SHORT_XKCD_REGEX = ACTIONIFY("xkcd l");
@@ -28,6 +28,30 @@ public class XKCD implements Module {
     public XKCD(Chatbot chatbot) {
         this.chatbot = chatbot;
         this.highestNumber = (int) new JSONObject(GET_PAGE_SOURCE("https://xkcd.com/info.0.json")).get("num");
+    }
+
+    private void sendXKCD(int number) {
+        this.highestNumber = (int) new JSONObject(GET_PAGE_SOURCE("https://xkcd.com/info.0.json")).get("num");
+        if (number < 1 || highestNumber < number) {
+            chatbot.sendMessage("XKCD number out of range. Please try XKCD's in range 1-" + highestNumber);
+        } else {
+            JSONObject xkcd = new JSONObject(GET_PAGE_SOURCE("https://xkcd.com/" + number + "/info.0.json"));
+
+            String title = xkcd.get("safe_title").toString();
+            String alt = xkcd.get("alt").toString();
+            String imgURL = xkcd.get("img").toString();
+
+            String response =
+                    "Title: " + title +
+                            "\nNumber: " + number +
+                            "\nAlt text: " + alt;
+
+            chatbot.sendImageWithMessage(imgURL, response);
+        }
+    }
+
+    private void sendRandomXKCD() {
+        sendXKCD((int) (Math.random() * highestNumber) + 1);
     }
 
     //region Overrides
@@ -83,33 +107,5 @@ public class XKCD implements Module {
         return commands;
     }
 
-    @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
-    }
     //endregion
-
-    private void sendXKCD(int number) {
-        this.highestNumber = (int) new JSONObject(GET_PAGE_SOURCE("https://xkcd.com/info.0.json")).get("num");
-        if (number < 1 || highestNumber < number) {
-            chatbot.sendMessage("XKCD number out of range. Please try XKCD's in range 1-" + highestNumber);
-        } else {
-            JSONObject xkcd = new JSONObject(GET_PAGE_SOURCE("https://xkcd.com/" + number + "/info.0.json"));
-
-            String title = xkcd.get("safe_title").toString();
-            String alt = xkcd.get("alt").toString();
-            String imgURL = xkcd.get("img").toString();
-
-            String response =
-                    "Title: " + title +
-                            "\nNumber: " + number +
-                            "\nAlt text: " + alt;
-
-            chatbot.sendImageFromURLWithMessage(imgURL, response);
-        }
-    }
-
-    private void sendRandomXKCD() {
-        sendXKCD((int) (Math.random() * highestNumber) + 1);
-    }
 }

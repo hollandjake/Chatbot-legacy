@@ -1,53 +1,23 @@
 package bot.utils;
 
-import org.json.simple.JSONObject;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-
-import java.util.ArrayList;
-import java.util.Objects;
-
-import static bot.utils.XPATHS.MESSAGE_SENDER_NICKNAME;
-import static bot.utils.XPATHS.MESSAGE_SENDER_REAL_NAME;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class Human {
     //region Constants
-    protected final String name;
-    //endregion
-
-    //region Variables
-    protected String nickname;
+    private final String name;
+    private final int ID;
     //endregion
 
     //region Constructors
-    private Human(WebElement webElement) {
-        nickname = webElement.findElement(By.xpath(MESSAGE_SENDER_NICKNAME)).getAttribute("aria-label");
-        name = webElement.findElement(By.xpath(MESSAGE_SENDER_REAL_NAME)).getAttribute("data-tooltip-content");
-    }
-
-    private Human(String name) {
+    public Human(String name, int id) {
         this.name = name;
+        this.ID = id;
     }
 
-    public static Human getFromElement(WebElement webElement, ArrayList<Human> people) {
-        String name = webElement.findElement(By.xpath(MESSAGE_SENDER_REAL_NAME)).getAttribute("data-tooltip-content");
-        for (Human p : people) {
-            if (p.name.equals(name)) {
-                return p;
-            }
-        }
-        Human newHuman = new Human(webElement);
-        people.add(newHuman);
-
-        return newHuman;
-    }
-
-    public static Human getFromImageElement(WebElement webElement, ArrayList<Human> people) {
-        return null;
-    }
-
-    public static Human createForBot(String name) {
-        return new Human(name);
+    public Human(ResultSet resultSet) throws SQLException {
+        this.ID = resultSet.getInt("H_ID");
+        this.name = resultSet.getString("H_name");
     }
     //endregion
 
@@ -56,29 +26,22 @@ public class Human {
         return name;
     }
 
-    public String getNickname() {
-        return nickname;
+    public int getID() {
+        return ID;
     }
-
     //endregion
 
-    public JSONObject toJSON() {
-        JSONObject me = new JSONObject();
-        me.put("name", name);
-        me.put("nickname", nickname);
-
-        return me;
-    }
-
     public String toString() {
-        return name + (nickname != null ? "(" + nickname + ")" : "");
+        return name;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Human human = (Human) o;
-        return Objects.equals(name, human.name);
+
+        return ID == human.ID;
     }
 }
