@@ -26,9 +26,8 @@ Image responses
 | `!cat` | Sends a picture of a cat |
 | `!dog` | Sends a picture of a dog |
 | `!extragooddog` | Send a picture of a dog from a curated list |
-| `!dab` | Sends a picture of a dabbing animal |
 | `!inspire` | Sends an inspirational quote from [InspiroBot](http://inspirobot.me) |
-| `!react` or `!reac` or `!reacc` | Gives the cats reaction |
+| `!react` or `!reac` or `!reac[as many c's]`| Gives the cats reaction |
 | `!tab` | Summons the tabulance to make things better |
 | `!xkcd` | Sends a random XKCD |
 | `!xkcd l` or `!xkcd latest` | Sends the latest XKCD |
@@ -44,7 +43,9 @@ Message responses
 | `!grab [num]` | Grabs the message [num] behind `!grab 1` is equal to `!grab` |
 | `!quote` | Returns a random grabbed message |
 | `!QUOTE` | Returns a random grabbed message but in uppercase |
-| `!quote reload` | Reloads the quote file if external changes have been made |
+| `!QuOtE` | Returns a random grabbed message but in shakey case |
+| `!quotecount` | Returns number of quotes for the current thread |
+| `!quotecount [name]` | Returns number of quotes from a user in this thread |
 | `!reddits` | Outputs list of reddits being used |
 | `!roll` | Returns a random number between 1-6 |
 | `!roll [num]` | Returns a random number between 1-[num] |

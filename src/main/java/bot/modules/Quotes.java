@@ -1,26 +1,19 @@
 package bot.modules;
 
 import bot.Chatbot;
-import bot.utils.Message;
-import bot.utils.Module;
+import bot.utils.*;
 import bot.utils.exceptions.MalformedCommandException;
-import com.google.common.collect.Lists;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.sql.*;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static bot.utils.CONSTANTS.*;
 
-public class Quotes implements Module {
+public class Quotes implements CommandModule, DatabaseModule {
     //region Constants
     private final String FULL_CAPS_QUOTE_REGEX = ACTIONIFY_CASE("QUOTE");
     private final String SHAKEY_QUOTE_REGEX = ACTIONIFY_CASE("quote");
@@ -29,21 +22,188 @@ public class Quotes implements Module {
     private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
     private final String LOCATE_REGEX = ACTIONIFY("locate (.+)");
     private final String QUOTE_COUNT_REGEX = ACTIONIFY("quotecount (.+)");
-    private final String RELOAD_QUOTE_REGEX = ACTIONIFY("quote reload");
-    private final JSONParser jsonParser = new JSONParser();
-    private final File quoteFile;
+    private final String QUOTE_TOTAL_COUNT_REGEX = ACTIONIFY("quotecount");
     private final Chatbot chatbot;
+    private final Database db;
     //endregion
 
-    //region Variables
-    private JSONArray quotesList;
+    //region Database Statements
+    private PreparedStatement GET_RAND_QUOTE_FROM_THREAD_STMT;
+    private PreparedStatement GET_NUM_QUOTES_FROM_THREAD_STMT;
+    private CallableStatement GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT;
+    private PreparedStatement SAVE_QUOTE_STMT;
+    private PreparedStatement CONTAINS_QUOTE_STMT;
     //endregion
 
     public Quotes(Chatbot chatbot) {
         this.chatbot = chatbot;
-        quoteFile = new File(appendModulePath(chatbot.getThreadId() + "-quotes.json"));
-        reloadQuotes();
+        this.db = chatbot.getDb();
     }
+
+    public Quotes(Database db) {
+        //used just for initialising the database
+        this.chatbot = null;
+        this.db = db;
+    }
+
+    private void quote(String type) {
+        Message quote = getRandomQuoteFromThreadId(chatbot.getThreadId());
+        if (quote != null) {
+            String message = quote.getMessage();
+            switch (type) {
+                case "caps":
+                    message = message.toUpperCase();
+                    break;
+                case "shaky":
+                    Boolean isCaps = false;
+                    String tempMessage = "";
+                    for (char x : message.toCharArray()) {
+                        if (Character.isAlphabetic(x)) {
+                            String c = String.valueOf(x);
+                            tempMessage += isCaps ? c.toLowerCase() : c.toUpperCase();
+                            isCaps = !isCaps;
+                        } else {
+                            tempMessage += x;
+                        }
+                    }
+                    message = tempMessage;
+            }
+            chatbot.sendImageWithMessage(quote.getImageUrl(),
+                    (message.length() > 0 ? "\"" + message + "\" - " : "") + quote.getSender() + " [" + quote.getDate().format(CONSTANTS.DATE_FORMATTER) + "]");
+        } else {
+            chatbot.sendMessage("There are no quotes available, why not try !grab or !grab [x] to make some");
+        }
+    }
+
+    private void quoteTotal() {
+        Integer count = getNumberOfQuotesFromThreadId(chatbot.getThreadId());
+
+        if (count != null) {
+            chatbot.sendMessage("This chat has " + count + " quote" + (count == 1 ? "" : "s"));
+        } else {
+            chatbot.sendMessage("This chat has 0 quotes. why not try !grab or !grab [x] to make some");
+        }
+    }
+
+    private void quoteCount(String query) {
+        AbstractMap.SimpleEntry<String, Integer> countData = getNumberOfQuotesFromThreadIdAndName(chatbot.getThreadId(), query);
+        Integer count = countData.getValue();
+        String quoteName = countData.getKey();
+        if (count != null) {
+            chatbot.sendMessage("\"" + quoteName + "\" has " + count + " quotes! :O");
+        } else {
+            chatbot.sendMessage("\"" + quoteName + "\" has 0 quotes! :'(");
+        }
+    }
+
+    private void grab(Message commandMessage, int offset) {
+        int targetIndex = commandMessage.getId() - offset;
+        Message targetMessage = db.getMessage(chatbot.getThreadId(), targetIndex);
+        if (targetMessage == null) {
+            chatbot.sendMessage("That grab is a little too far for me");
+        } else {
+            save(commandMessage, targetMessage);
+        }
+    }
+
+    private void locate(Message commandMessage, String query) {
+        Optional<Message> targetMessage = db.getMessagesWithMessageLike(chatbot.getThreadId(), query).stream().filter(message -> !message.equals(commandMessage) && !chatbot.containsCommand(message)).findFirst();
+        if (targetMessage.isPresent()) {
+            save(commandMessage, targetMessage.get());
+        } else {
+            chatbot.sendMessage("I can't seem to find a message with \"" + query + "\" in it :'(");
+        }
+    }
+
+    private boolean save(Message commandMessage, Message message) {
+        //Check if message contains a command
+        if (message.getMessage().length() == 0 && message.getImageUrl() == null) {
+            chatbot.sendMessage("That message is empty");
+            return false;
+        } else if (message.getSender().equals(commandMessage.getSender())) {
+            chatbot.sendMessage("Did you just try and grab yourself? \uD83D\uDE20");
+            return false;
+        } else if (chatbot.containsCommand(message)) {
+            chatbot.sendMessage("Don't do that >:(");
+            return false;
+        } else if (containsQuote(chatbot.getThreadId(), message)) {
+            chatbot.sendMessage("That quote has already been grabbed");
+            return false;
+        } else {
+            saveQuote(chatbot.getThreadId(), message);
+            chatbot.sendImageWithMessage(message.getImageUrl(), "Grabbed" + (message.getMessage().length() > 0 ? " \"" + message.getMessage() + "\"" : ""));
+            return true;
+        }
+    }
+
+    //region Database
+    public boolean containsQuote(int threadId, Message message) {
+        try {
+            db.checkConnection();
+            CONTAINS_QUOTE_STMT.setInt(1, threadId);
+            CONTAINS_QUOTE_STMT.setInt(2, message.getId());
+            ResultSet resultSet = CONTAINS_QUOTE_STMT.executeQuery();
+            return resultSet.absolute(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean saveQuote(int threadId, Message message) {
+        try {
+            db.checkConnection();
+            SAVE_QUOTE_STMT.setInt(1, threadId);
+            SAVE_QUOTE_STMT.setInt(2, message.getId());
+            return SAVE_QUOTE_STMT.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public Message getRandomQuoteFromThreadId(int threadId) {
+        try {
+            db.checkConnection();
+            GET_RAND_QUOTE_FROM_THREAD_STMT.setInt(1, threadId);
+            return Message.fromResultSet(GET_RAND_QUOTE_FROM_THREAD_STMT.executeQuery());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Integer getNumberOfQuotesFromThreadId(int threadId) {
+        try {
+            db.checkConnection();
+            GET_NUM_QUOTES_FROM_THREAD_STMT.setInt(1, threadId);
+            ResultSet resultSet = GET_NUM_QUOTES_FROM_THREAD_STMT.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public AbstractMap.SimpleEntry<String, Integer> getNumberOfQuotesFromThreadIdAndName(int threadId, String name) {
+        try {
+            db.checkConnection();
+            GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT.setInt(1, threadId);
+            GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT.setString(2, name);
+            ResultSet resultSet = GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT.executeQuery();
+            if (resultSet.next()) {
+                String quoteName = resultSet.getString("H_name");
+                Integer count = resultSet.getInt("Q_count");
+                return new AbstractMap.SimpleEntry<>(quoteName, count);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    //endregion
 
     //region Overrides
     @Override
@@ -84,16 +244,10 @@ public class Quotes implements Module {
             Matcher matcher = Pattern.compile(LOCATE_REGEX).matcher(message.getMessage());
             if (matcher.find()) {
                 locate(message, matcher.group(1));
-
                 return true;
             } else {
                 throw new MalformedCommandException();
             }
-        } else if (match.equals(RELOAD_QUOTE_REGEX)) {
-            reloadQuotes();
-            chatbot.sendMessage("Quotes updated");
-
-            return true;
         } else if (match.equals(QUOTE_COUNT_REGEX)) {
             Matcher matcher = Pattern.compile(QUOTE_COUNT_REGEX).matcher(message.getMessage());
             if (matcher.find()) {
@@ -103,6 +257,9 @@ public class Quotes implements Module {
             } else {
                 throw new MalformedCommandException();
             }
+        } else if (match.equals(QUOTE_TOTAL_COUNT_REGEX)) {
+            quoteTotal();
+            return true;
         } else {
             return false;
         }
@@ -122,8 +279,8 @@ public class Quotes implements Module {
             return LOCATE_REGEX;
         } else if (messageBody.matches(QUOTE_COUNT_REGEX)) {
             return QUOTE_COUNT_REGEX;
-        } else if (messageBody.matches(RELOAD_QUOTE_REGEX)) {
-            return RELOAD_QUOTE_REGEX;
+        } else if (messageBody.matches(QUOTE_TOTAL_COUNT_REGEX)) {
+            return QUOTE_TOTAL_COUNT_REGEX;
         } else {
             return "";
         }
@@ -140,139 +297,41 @@ public class Quotes implements Module {
         commands.add(DEACTIONIFY(GRAB_OFFSET_REGEX));
         commands.add(DEACTIONIFY(LOCATE_REGEX));
         commands.add(DEACTIONIFY(QUOTE_COUNT_REGEX));
-        commands.add(DEACTIONIFY(RELOAD_QUOTE_REGEX));
+        commands.add(DEACTIONIFY(QUOTE_TOTAL_COUNT_REGEX));
         return commands;
     }
 
     @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
+    public void prepareStatements(Connection connection) throws SQLException {
+        GET_RAND_QUOTE_FROM_THREAD_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   Q.ID as Q_ID," +
+                "   Q.thread_id as Q_T," +
+                "   M.ID as M_ID," +
+                "   H.ID as H_ID," +
+                "   H.name as H_name," +
+                "   M.message as M_message," +
+                "   I.url as I_url," +
+                "   M.date as M_date " +
+                "FROM Quotes Q " +
+                "JOIN Messages M on Q.ID = M.ID and Q.thread_id = M.thread_id " +
+                "JOIN Humans H on M.sender_id = H.ID " +
+                "LEFT JOIN Images I on M.image_id = I.ID " +
+                "WHERE Q.thread_id = ? " +
+                "ORDER BY RAND() " +
+                "LIMIT 1");
+        GET_NUM_QUOTES_FROM_THREAD_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   COUNT(Q.ID) " +
+                "FROM Quotes Q " +
+                "WHERE Q.thread_id = ?");
+        GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT = connection.prepareCall("{CALL GetNumQuotesFromThreadAndName(?,?)}");
+        SAVE_QUOTE_STMT = connection.prepareStatement("INSERT INTO Quotes (thread_id, ID) VALUES (?, ?)");
+        CONTAINS_QUOTE_STMT = connection.prepareStatement("" +
+                "SELECT Q.ID " +
+                "FROM Quotes Q " +
+                "WHERE Q.thread_id = ? AND Q.ID = ?");
     }
+
     //endregion
-
-    private void quote(String type) {
-        if (quotesList.size() > 0) {
-            JSONObject quote = (JSONObject) GET_RANDOM(quotesList);
-            JSONObject sender = (JSONObject) quote.get("sender");
-            String message = (String) quote.get("message");
-            switch (type) {
-                case "caps":
-                    message = message.toUpperCase();
-                    break;
-                case "shaky":
-                    Boolean isCaps = false;
-                    String tempMessage = "";
-                    for (char x : message.toCharArray()) {
-                        if (Character.isAlphabetic(x)) {
-                            String c = String.valueOf(x);
-                            tempMessage += isCaps ? c.toLowerCase() : c.toUpperCase();
-                            isCaps = !isCaps;
-                        } else {
-                            tempMessage += x;
-                        }
-                    }
-                    message = tempMessage;
-            }
-            chatbot.sendMessage("\"" + message + "\" - " + sender.get("name") + " [" + quote.get("timestamp") + "]");
-        } else {
-            chatbot.sendMessage("There are no quotes available, why not try !grab or !grab [x] to make some");
-        }
-    }
-
-    private void quoteCount(String query) {
-        int count = 0;
-        for (Object q : quotesList) {
-            JSONObject quote = (JSONObject) q;
-            JSONObject sender = (JSONObject) quote.get("sender");
-            String fullname = sender.get("name").toString();
-            String nickname = sender.get("nickname").toString();
-            String qry = query.toLowerCase();
-            if (fullname.toLowerCase().contains(qry) || nickname.toLowerCase().contains(qry)) {
-                query = fullname;
-                count++;
-            }
-        }
-
-        chatbot.sendMessage("\"" + query + "\" has " + count + " quotes!" + (count > 0 ? " :O" : " :'("));
-    }
-
-    private void grab(Message commandMessage, int offset) {
-        ArrayList<Message> messageLog = chatbot.getMessageLog();
-        int commandIndex = messageLog.indexOf(commandMessage);
-        int targetMessageIndex = commandIndex - offset;
-
-        try {
-            Message previousMessage = messageLog.get(targetMessageIndex);
-            save(commandMessage, previousMessage);
-        } catch (IndexOutOfBoundsException e) {
-            chatbot.sendMessage("That grab is a little too far for me");
-        }
-    }
-
-    private void locate(Message commandMessage, String query) {
-        query = query.toLowerCase();
-        ArrayList<Message> messages = chatbot.getMessageLog();
-        for (Message message : Lists.reverse(messages)) {
-            if (!message.equals(commandMessage) && !message.doesContainsCommand() && message.getMessage().toLowerCase().contains(query)) {
-                save(commandMessage, message);
-                return;
-            }
-        }
-        chatbot.sendMessage("I can't seem to find a message with \"" + query + "\" in it :'(");
-    }
-
-    private boolean save(Message commandMessage, Message message) {
-        //Check if message contains a command
-        if (message.doesContainsCommand()) {
-            chatbot.sendMessage("Don't do that >:(");
-            return false;
-        } else if (message.getSender().equals(commandMessage.getSender())) {
-            chatbot.sendMessage("Did you just try and grab yourself? \uD83D\uDE20");
-            return false;
-        } else if (message.getMessage().length() == 0) {
-            chatbot.sendMessage("That message is empty");
-            return false;
-        }
-
-        quotesList.add(message.toJSON());
-        try {
-            FileWriter fileWriter = new FileWriter(quoteFile, false);
-            quotesList.writeJSONString(fileWriter);
-            fileWriter.close();
-        } catch (IOException e) {
-            System.out.println("Failed to save quote");
-            e.printStackTrace();
-        }
-
-        chatbot.sendMessage("Grabbed \"" + message.getMessage() + "\"");
-        return true;
-    }
-
-    private void reloadQuotes() {
-        try {
-            if (quoteFile.exists()) {
-                FileReader fileReader = new FileReader(quoteFile);
-                quotesList = (JSONArray) jsonParser.parse(fileReader);
-                fileReader.close();
-            } else {
-                File directory = quoteFile.getParentFile();
-                if (!directory.exists()) {
-                    directory.mkdirs();
-                }
-                quoteFile.createNewFile();
-                quotesList = new JSONArray();
-
-                FileWriter fileWriter = new FileWriter(quoteFile, false);
-                quotesList.writeJSONString(fileWriter);
-                fileWriter.close();
-            }
-        } catch (IOException e) {
-            System.out.println("Quotes are unavailable for this session due to an error reading the file");
-            e.printStackTrace();
-        } catch (ParseException e) {
-            System.out.println("Quotes are unavailable for this session due to the error");
-            e.printStackTrace();
-        }
-    }
-
 }

@@ -6,7 +6,6 @@ import org.openqa.selenium.Keys;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
@@ -19,9 +18,13 @@ public interface CONSTANTS {
     //endregion
 
     //region Date formats
-    SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd/MM/yy");
+    DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yy");
     DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
     DateTimeFormatter ERROR_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
+    //endregion
+
+    //region Image
+    int MAX_IMAGE_SIZE = 200000; //In Bytes
     //endregion
 
     Random RANDOM = new Random();

@@ -1,8 +1,8 @@
 package bot.modules;
 
 import bot.Chatbot;
+import bot.utils.CommandModule;
 import bot.utils.Message;
-import bot.utils.Module;
 import bot.utils.exceptions.MalformedCommandException;
 
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import static bot.utils.CONSTANTS.ACTIONIFY;
 import static bot.utils.CONSTANTS.DEACTIONIFY;
 
-public class Roll implements Module {
+public class Roll implements CommandModule {
     //region Constants
     private final String ROLL_DICE_REGEX = ACTIONIFY("roll");
     private final String ROLL_REGEX = ACTIONIFY("roll (\\d+)");
@@ -21,6 +21,11 @@ public class Roll implements Module {
 
     public Roll(Chatbot chatbot) {
         this.chatbot = chatbot;
+    }
+
+    private void roll(int lower, int upper) {
+        int number = (int) (Math.random() * (upper - lower) + lower);
+        chatbot.sendMessage("You rolled " + number);
     }
 
     //region Overrides
@@ -69,16 +74,6 @@ public class Roll implements Module {
         return commands;
     }
 
-    @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
-    }
-
     //endregion
-
-    private void roll(int lower, int upper) {
-        int number = (int) (Math.random() * (upper - lower) + lower);
-        chatbot.sendMessage("You rolled " + number);
-    }
 
 }

@@ -4,43 +4,41 @@ import bot.Chatbot;
 import bot.utils.Message;
 import bot.utils.RedditModule;
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
-import static bot.modules.Reddit.loadSubreddits;
-import static bot.utils.CONSTANTS.*;
+import static bot.utils.CONSTANTS.ACTIONIFY;
+import static bot.utils.CONSTANTS.DEACTIONIFY;
 
-public class Dogs implements RedditModule {
+public class Dogs extends RedditModule {
     //region Constants
     private final String DOG_REGEX = ACTIONIFY("dog");
     private final String DOGGO_REGEX = ACTIONIFY("doggo");
     private final String EXTRA_GOOD_DOG_REGEX = ACTIONIFY("extragooddog");
-    private final Chatbot chatbot;
     //endregion
 
-    //region Variables
-    private List<String> subreddits;
-    private List<String> responses;
-    private Image preloadedImage;
-
-    private List<String> extraGoodDogImages;
+    //region Database statements
+    private PreparedStatement GET_RANDOM_EXTRA_GOOD_IMAGE_STMT;
     //endregion
 
     public Dogs(Chatbot chatbot) {
-        this.chatbot = chatbot;
-        subreddits = loadSubreddits(new File(appendModulePath("subreddits.txt")));
+        super(chatbot);
+    }
+
+    private String getExtraGoodImage() {
         try {
-            responses = Files.readAllLines(Paths.get(appendModulePath("responses.txt")));
-            extraGoodDogImages = Files.readAllLines(Paths.get(appendModulePath("extraGoodDogs.txt")));
-        } catch (IOException e) {
-            System.out.println("Dog quotes/images are not available this session");
+            db.checkConnection();
+            ResultSet resultSet = GET_RANDOM_EXTRA_GOOD_IMAGE_STMT.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getString("I_url");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        preloadedImage = Reddit.getSubredditPicture(subreddits);
+        return null;
     }
 
     //region Overrides
@@ -49,13 +47,13 @@ public class Dogs implements RedditModule {
     public boolean process(Message message) {
         String match = getMatch(message);
         if (match.equals(DOG_REGEX) || match.equals(DOGGO_REGEX)) {
-            String quote = GET_RANDOM(responses);
-            chatbot.sendImageWithMessage(preloadedImage, quote);
-            preloadedImage = Reddit.getSubredditPicture(subreddits);
+            String response = getResponse();
+            String image = getImage();
+            chatbot.sendImageWithMessage(image, response);
             return true;
         } else if (match.equals(EXTRA_GOOD_DOG_REGEX)) {
-            String imageURL = GET_RANDOM(extraGoodDogImages);
-            chatbot.sendImageFromURLWithMessage(imageURL, "Woof!");
+            String image = getExtraGoodImage();
+            chatbot.sendImageWithMessage(image, "Extra good woof!");
             return true;
         } else {
             return false;
@@ -88,17 +86,27 @@ public class Dogs implements RedditModule {
     }
 
     @Override
-    public String appendModulePath(String message) {
-        return chatbot.appendRootPath("modules/" + getClass().getSimpleName() + "/" + message);
-    }
+    public void prepareStatements(Connection connection) throws SQLException {
+        GET_SUBREDDITS_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   S.link as S_link " +
+                "FROM Subreddits S " +
+                "WHERE type = 'Dogs'");
 
-    @Override
-    public String toString() {
-        String message = getClass().getSimpleName() + ": \n";
-        for (String subreddit : subreddits) {
-            message += "\t" + subreddit + "\n";
-        }
-        return message;
+        GET_RESPONSE_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   R.message as R_message " +
+                "FROM DogResponses R " +
+                "ORDER BY RAND() " +
+                "LIMIT 1");
+
+        GET_RANDOM_EXTRA_GOOD_IMAGE_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   I.url as I_url " +
+                "FROM ExtraGoodDogs E " +
+                "JOIN Images I on E.image_id = I.ID " +
+                "ORDER BY RAND() " +
+                "LIMIT 1");
     }
     //endregion
 }

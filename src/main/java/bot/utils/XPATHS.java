@@ -27,9 +27,10 @@ public interface XPATHS {
     //region Messages
     String MESSAGE_GROUPS = "//div[@id='js_1']/div";
     String MESSAGES_ALL = MESSAGE_GROUPS + "/div/div/div[contains(@class,'_o46')]";
-    String MESSAGES_OTHERS = MESSAGE_GROUPS + "/div/div/div[contains(@class,'_29_7')]";
+    String STICKER_FILTER = MESSAGE_GROUPS + "[not(div/div/div/div/div/div[contains(@data-testid,'sticker')])]";
+    String MESSAGES_OTHERS = STICKER_FILTER + "/div/div/div[contains(@class,'_29_7')]";
     String MESSAGES_OTHERS_RECENT = "(" + MESSAGES_OTHERS + ")[last()]";
-    String MESSAGES_MINE = MESSAGE_GROUPS + "/div/div/div[contains(@class,'_nd_')]";
+    String MESSAGES_MINE = STICKER_FILTER + "/div/div/div[contains(@class,'_nd_')]";
     String MESSAGES_MINE_RECENT = "(" + MESSAGES_MINE + ")[last()]";
 
     //region Requires MESSAGE ELEMENT

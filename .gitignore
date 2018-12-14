@@ -4,5 +4,4 @@ src/errors/
 
 *.iml
 
-src/main/resources/versions/dogbot/modules/Quotes/
-!src/main/resources/versions/dogbot/modules/Quotes/1388627754518614-quotes.json
+*loginDetails
