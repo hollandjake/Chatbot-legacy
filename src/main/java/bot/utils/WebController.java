@@ -1,10 +1,7 @@
 package bot.utils;
 
 import bot.Chatbot;
-import org.openqa.selenium.By;
-import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
@@ -51,6 +48,7 @@ public class WebController {
 
         //Setup drivers
         ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions.addArguments("mute-audio", "console");
         if (headless) {
             chromeOptions.addArguments("headless", "window-size=1920,1080");
         } else if (maximised) {
@@ -83,9 +81,9 @@ public class WebController {
         //Goto page
         webDriver.get("https://www.messenger.com");
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(LOGIN_EMAIL)));
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_EMAIL)));
         webDriver.findElement(By.xpath(LOGIN_EMAIL)).sendKeys(username);
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(LOGIN_PASS)));
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_PASS)));
         webDriver.findElement(By.xpath(LOGIN_PASS)).sendKeys(password);
 
         webDriver.findElement(By.xpath(COOKIES_CLOSE)).click();
@@ -137,9 +135,14 @@ public class WebController {
     private WebElement selectInputBox() {
         wait.until(ExpectedConditions.elementToBeClickable(By.xpath(INPUT_FIELD)));
         WebElement inputBoxElement = webDriver.findElement(By.xpath(INPUT_FIELD));
-        inputBoxElement.click();
 
-        return inputBoxElement;
+        try {
+            inputBoxElement.click();
+            return inputBoxElement;
+        } catch (WebDriverException e) {
+            webDriver.navigate().refresh();
+            return selectInputBox();
+        }
     }
     //endregion
 

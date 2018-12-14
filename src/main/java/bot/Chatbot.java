@@ -21,7 +21,7 @@ import java.util.List;
 
 public class Chatbot {
     //region Constants
-    private final String VERSION = "V1.19.0";
+    private final String VERSION = "V1.20.0";
     protected final HashMap<String, Module> modules = new HashMap<>();
     protected final WebController webController;
     private final ArrayList<Message> messageLog = new ArrayList<>();
