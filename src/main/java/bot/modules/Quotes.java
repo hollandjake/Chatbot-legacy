@@ -15,9 +15,8 @@ import static bot.utils.CONSTANTS.*;
 
 public class Quotes implements CommandModule, DatabaseModule {
     //region Constants
-    private final String FULL_CAPS_QUOTE_REGEX = ACTIONIFY_CASE("QUOTE");
-    private final String SHAKEY_QUOTE_REGEX = ACTIONIFY_CASE("quote");
-    private final String QUOTE_REGEX = ACTIONIFY("quote");
+    private final String FULL_CAPS_QUOTE_REGEX = ACTIONIFY_CASE("QUOTE (.+)");
+    private final String QUOTE_REGEX = ACTIONIFY("quote (.+)");
     private final String GRAB_REGEX = ACTIONIFY("grab");
     private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
     private final String LOCATE_REGEX = ACTIONIFY("locate (.+)");
@@ -29,6 +28,7 @@ public class Quotes implements CommandModule, DatabaseModule {
 
     //region Database Statements
     private PreparedStatement GET_RAND_QUOTE_FROM_THREAD_STMT;
+    private PreparedStatement GET_RAND_QUOTE_FROM_THREAD_AND_NAME_STMT;
     private PreparedStatement GET_NUM_QUOTES_FROM_THREAD_STMT;
     private CallableStatement GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT;
     private PreparedStatement SAVE_QUOTE_STMT;
@@ -46,8 +46,7 @@ public class Quotes implements CommandModule, DatabaseModule {
         this.db = db;
     }
 
-    private void quote(String type) {
-        Message quote = getRandomQuoteFromThreadId(chatbot.getThreadId());
+    private void quote(Message quote, String type) {
         if (quote != null) {
             String message = quote.getMessage();
             switch (type) {
@@ -76,7 +75,7 @@ public class Quotes implements CommandModule, DatabaseModule {
     }
 
     private void quoteTotal() {
-        Integer count = getNumberOfQuotesFromThreadId(chatbot.getThreadId());
+        Integer count = getNumberOfQuotes();
 
         if (count != null) {
             chatbot.sendMessage("This chat has " + count + " quote" + (count == 1 ? "" : "s"));
@@ -86,7 +85,7 @@ public class Quotes implements CommandModule, DatabaseModule {
     }
 
     private void quoteCount(String query) {
-        AbstractMap.SimpleEntry<String, Integer> countData = getNumberOfQuotesFromThreadIdAndName(chatbot.getThreadId(), query);
+        AbstractMap.SimpleEntry<String, Integer> countData = getNumberOfQuotesFromName(query);
         Integer count = countData.getValue();
         String quoteName = countData.getKey();
         if (count != null) {
@@ -162,10 +161,10 @@ public class Quotes implements CommandModule, DatabaseModule {
         return false;
     }
 
-    public Message getRandomQuoteFromThreadId(int threadId) {
+    public Message getRandomQuote() {
         try {
             db.checkConnection();
-            GET_RAND_QUOTE_FROM_THREAD_STMT.setInt(1, threadId);
+            GET_RAND_QUOTE_FROM_THREAD_STMT.setInt(1, chatbot.getThreadId());
             return Message.fromResultSet(GET_RAND_QUOTE_FROM_THREAD_STMT.executeQuery());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -173,10 +172,22 @@ public class Quotes implements CommandModule, DatabaseModule {
         return null;
     }
 
-    public Integer getNumberOfQuotesFromThreadId(int threadId) {
+    public Message getRandomQuoteFromName(String name) {
         try {
             db.checkConnection();
-            GET_NUM_QUOTES_FROM_THREAD_STMT.setInt(1, threadId);
+            GET_RAND_QUOTE_FROM_THREAD_AND_NAME_STMT.setInt(1, chatbot.getThreadId());
+            GET_RAND_QUOTE_FROM_THREAD_AND_NAME_STMT.setString(2, name);
+            return Message.fromResultSet(GET_RAND_QUOTE_FROM_THREAD_AND_NAME_STMT.executeQuery());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Integer getNumberOfQuotes() {
+        try {
+            db.checkConnection();
+            GET_NUM_QUOTES_FROM_THREAD_STMT.setInt(1, chatbot.getThreadId());
             ResultSet resultSet = GET_NUM_QUOTES_FROM_THREAD_STMT.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getInt(1);
@@ -187,10 +198,10 @@ public class Quotes implements CommandModule, DatabaseModule {
         return null;
     }
 
-    public AbstractMap.SimpleEntry<String, Integer> getNumberOfQuotesFromThreadIdAndName(int threadId, String name) {
+    public AbstractMap.SimpleEntry<String, Integer> getNumberOfQuotesFromName(String name) {
         try {
             db.checkConnection();
-            GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT.setInt(1, threadId);
+            GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT.setInt(1, chatbot.getThreadId());
             GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT.setString(2, name);
             ResultSet resultSet = GET_NUM_QUOTES_FROM_THREAD_AND_NAME_STMT.executeQuery();
             if (resultSet.next()) {
@@ -221,12 +232,25 @@ public class Quotes implements CommandModule, DatabaseModule {
                     numLetters++;
                 }
             }
+            Matcher matcher = Pattern.compile(QUOTE_REGEX).matcher(message.getMessage());
+            Message quote = null;
+            if (matcher.find()) {
+                String quoteName = matcher.group(1);
+                quote = getRandomQuoteFromName(quoteName);
+                if (quote == null) {
+                    chatbot.sendMessage("\"" + quoteName + "\" has 0 quotes! :'(");
+                    return true;
+                }
+            }
+            if (quote == null) {
+                quote = getRandomQuote();
+            }
             if (numUpper == numLetters) {
-                quote("caps");
+                quote(quote, "caps");
             } else if (numUpper > 1) {
-                quote("shaky");
+                quote(quote, "shaky");
             } else {
-                quote("normal");
+                quote(quote, "normal");
             }
             return true;
         } else if (match.equals(GRAB_REGEX)) {
@@ -291,7 +315,6 @@ public class Quotes implements CommandModule, DatabaseModule {
     public ArrayList<String> getCommands() {
         ArrayList<String> commands = new ArrayList<>();
         commands.add(DEACTIONIFY_CASE(FULL_CAPS_QUOTE_REGEX));
-        commands.add(DEACTIONIFY_CASE(SHAKEY_QUOTE_REGEX));
         commands.add(DEACTIONIFY(QUOTE_REGEX));
         commands.add(DEACTIONIFY(GRAB_REGEX));
         commands.add(DEACTIONIFY(GRAB_OFFSET_REGEX));
@@ -318,6 +341,24 @@ public class Quotes implements CommandModule, DatabaseModule {
                 "JOIN Humans H on M.sender_id = H.ID " +
                 "LEFT JOIN Images I on M.image_id = I.ID " +
                 "WHERE Q.thread_id = ? " +
+                "ORDER BY RAND() " +
+                "LIMIT 1");
+        GET_RAND_QUOTE_FROM_THREAD_AND_NAME_STMT = connection.prepareStatement("" +
+                "SELECT" +
+                "   Q.ID as Q_ID," +
+                "   Q.thread_id as Q_T," +
+                "   M.ID as M_ID," +
+                "   H.ID as H_ID," +
+                "   H.name as H_name," +
+                "   M.message as M_message," +
+                "   I.url as I_url," +
+                "   M.date as M_date " +
+                "FROM Quotes Q " +
+                "JOIN Messages M on Q.ID = M.ID and Q.thread_id = M.thread_id " +
+                "JOIN Humans H on M.sender_id = H.ID " +
+                "LEFT JOIN Images I on M.image_id = I.ID " +
+                "WHERE Q.thread_id = ? " +
+                "AND H.name LIKE CONCAT('%',?,'%')" +
                 "ORDER BY RAND() " +
                 "LIMIT 1");
         GET_NUM_QUOTES_FROM_THREAD_STMT = connection.prepareStatement("" +
