@@ -180,7 +180,7 @@ public class Chatbot {
         modules.put("Stats", new Stats(this));
         modules.put("Ping", new Ping(this));
         modules.put("Github", new OneLinkCommand(this,
-                List.of("github"),
+                List.of("github", "repo"),
                 "https://github.com/hollandjake/Chatbot",
                 "Github repository"));
         modules.put("Commands", new OneLinkCommand(this,
