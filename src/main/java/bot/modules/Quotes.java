@@ -19,7 +19,7 @@ public class Quotes implements CommandModule, DatabaseModule {
     private final String QUOTE_REGEX = ACTIONIFY("quote (.+)");
     private final String GRAB_REGEX = ACTIONIFY("grab");
     private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
-    private final String LOCATE_REGEX = ACTIONIFY("locate (.+)");
+    private final String LOCATE_REGEX = ACTIONIFY("(locate|grab) (.+)");
     private final String QUOTE_COUNT_REGEX = ACTIONIFY("quotecount (.+)");
     private final String QUOTE_TOTAL_COUNT_REGEX = ACTIONIFY("quotecount");
     private final Chatbot chatbot;
@@ -267,7 +267,7 @@ public class Quotes implements CommandModule, DatabaseModule {
         } else if (match.equals(LOCATE_REGEX)) {
             Matcher matcher = Pattern.compile(LOCATE_REGEX).matcher(message.getMessage());
             if (matcher.find()) {
-                locate(message, matcher.group(1));
+                locate(message, matcher.group(2));
                 return true;
             } else {
                 throw new MalformedCommandException();
