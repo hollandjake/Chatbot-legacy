@@ -80,6 +80,9 @@ public class Chatbot {
             try {
                 webController.waitForNewMessage();
                 Message newMessage = webController.getLatestMessage();
+                if (newMessage == null) {
+                    continue;
+                }
 
                 if (config.containsKey("debug")) {
                     System.out.println(newMessage);
