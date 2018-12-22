@@ -12,7 +12,7 @@ Inherited commands
 | Command | Response |
 | ------- | -------- |
 | `!commands` or `!help` | Links to this readme |
-| `!github` | Links to [this](https://github.com/hollandjake/Chatbot) github repository |
+| `!github` or `!repo` | Links to [this](https://github.com/hollandjake/Chatbot) github repository |
 | `!ping` | Checks if bot is active |
 | `!shutdown [code]` | shuts the bot down. The code is output at boot for the bot |
 | `!stats` | Outputs information about the bots configuration |
@@ -40,7 +40,8 @@ Message responses
 | `!ask [message]` or `!8ball [message]` | Query the all knowing magic 8 ball |
 | `!feedback` | Sends a link to the group [Feedback form](https://docs.google.com/document/d/19Vquu0fh8LCqUXH0wwpm9H9MSq1LrEx1Z2Xg9NknKmg/edit?usp=sharing) |
 | `!grab` | Grabs the previous message |
-| `!grab [num]` | Grabs the message [num] behind `!grab 1` is equal to `!grab` |
+| `!grab [num]` | Grabs the message [num] behind. `!grab 1` is equal to `!grab` |
+| `!locate [message]` or `!grab [message]` | Grabs the most recent message to match the query in message |
 | `!quote` | Returns a random grabbed message |
 | `!QUOTE` | Returns a random grabbed message but in uppercase |
 | `!QuOtE` | Returns a random grabbed message but in shakey case |
