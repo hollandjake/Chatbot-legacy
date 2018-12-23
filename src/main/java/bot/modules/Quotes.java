@@ -11,12 +11,12 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static bot.utils.CONSTANTS.*;
+import static bot.utils.CONSTANTS.ACTIONIFY;
+import static bot.utils.CONSTANTS.DEACTIONIFY;
 
 public class Quotes implements CommandModule, DatabaseModule {
     //region Constants
-    private final String FULL_CAPS_QUOTE_REGEX = ACTIONIFY_CASE("QUOTE (.+)");
-    private final String QUOTE_REGEX = ACTIONIFY("quote (.+)");
+    private final String QUOTE_REGEX = ACTIONIFY("quote( (.+))?");
     private final String GRAB_REGEX = ACTIONIFY("grab");
     private final String GRAB_OFFSET_REGEX = ACTIONIFY("grab (\\d+)");
     private final String LOCATE_REGEX = ACTIONIFY("(locate|grab) (.+)");
@@ -233,16 +233,15 @@ public class Quotes implements CommandModule, DatabaseModule {
                 }
             }
             Matcher matcher = Pattern.compile(QUOTE_REGEX).matcher(message.getMessage());
-            Message quote = null;
-            if (matcher.find()) {
-                String quoteName = matcher.group(1);
+            Message quote;
+            if (matcher.find() && matcher.group(2) != null) {
+                String quoteName = matcher.group(2);
                 quote = getRandomQuoteFromName(quoteName);
                 if (quote == null) {
                     chatbot.sendMessage("\"" + quoteName + "\" has 0 quotes! :'(");
                     return true;
                 }
-            }
-            if (quote == null) {
+            } else {
                 quote = getRandomQuote();
             }
             if (numUpper == numLetters) {
@@ -314,7 +313,6 @@ public class Quotes implements CommandModule, DatabaseModule {
     @SuppressWarnings("Duplicates")
     public ArrayList<String> getCommands() {
         ArrayList<String> commands = new ArrayList<>();
-        commands.add(DEACTIONIFY_CASE(FULL_CAPS_QUOTE_REGEX));
         commands.add(DEACTIONIFY(QUOTE_REGEX));
         commands.add(DEACTIONIFY(GRAB_REGEX));
         commands.add(DEACTIONIFY(GRAB_OFFSET_REGEX));
