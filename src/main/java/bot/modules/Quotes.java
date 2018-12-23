@@ -356,7 +356,7 @@ public class Quotes implements CommandModule, DatabaseModule {
                 "JOIN Humans H on M.sender_id = H.ID " +
                 "LEFT JOIN Images I on M.image_id = I.ID " +
                 "WHERE Q.thread_id = ? " +
-                "AND H.name LIKE CONCAT('%',?,'%')" +
+                "AND H.name COLLATE UTF8MB4_GENERAL_CI LIKE CONCAT('%',?,'%')" +
                 "ORDER BY RAND() " +
                 "LIMIT 1");
         GET_NUM_QUOTES_FROM_THREAD_STMT = connection.prepareStatement("" +
