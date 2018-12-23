@@ -119,7 +119,7 @@ public class Database {
      */
     public void checkConnection() throws SQLException {
         java.util.Date now = new java.util.Date();
-        if (now.getTime() - lastConnectionRequest.getTime() >= connectionTimeout || connection.isClosed()) {
+        if (connection.isClosed() || now.getTime() - lastConnectionRequest.getTime() >= connectionTimeout) {
             try {
                 connection.createStatement().getWarnings();
             } catch (SQLException e) {
