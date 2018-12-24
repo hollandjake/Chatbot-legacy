@@ -142,7 +142,7 @@ public class WebController {
     public Message getLatestMessage() {
         WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
         //Move mouse over message so messenger marks it as read
-        messageElement.click();
+        selectInputBox();
         return Message.fromElement(chatbot, messageElement);
     }
 
