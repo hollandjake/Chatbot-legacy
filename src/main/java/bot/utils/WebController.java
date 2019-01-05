@@ -64,7 +64,7 @@ public class WebController {
         //endregion
 
         //region Setup waits
-        wait = new WebDriverWait(webDriver, 10);
+        wait = new WebDriverWait(webDriver, 30);
         messageWait = new WebDriverWait(webDriver, chatbot.getMessageTimeout().getSeconds(), chatbot.getRefreshRate());
         //endregion
 

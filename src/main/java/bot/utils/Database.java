@@ -92,7 +92,10 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            Runtime.getRuntime().addShutdownHook(shutdownThread);
+            try {
+                Runtime.getRuntime().addShutdownHook(shutdownThread);
+            } catch (IllegalArgumentException ignore) {
+            }
         }
     }
 
@@ -117,13 +120,13 @@ public class Database {
     /**
      * checks the connections status to make sure a connection is always active
      */
-    public void checkConnection() throws SQLException {
+    public void checkConnection() {
         java.util.Date now = new java.util.Date();
-        if (connection.isClosed() || now.getTime() - lastConnectionRequest.getTime() >= connectionTimeout) {
+        if (now.getTime() - lastConnectionRequest.getTime() >= connectionTimeout) {
             try {
-                connection.createStatement().getWarnings();
+                PreparedStatement stmt = connection.prepareStatement("SELECT NOW()");
+                stmt.execute();
             } catch (SQLException e) {
-                e.printStackTrace();
                 openConnection(url, username, password, chatbot);
             }
         }
