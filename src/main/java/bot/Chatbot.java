@@ -1,7 +1,7 @@
 package bot;
 
-import bot.modules.*;
 import bot.modules.Shutdown;
+import bot.modules.*;
 import bot.utils.*;
 import bot.utils.exceptions.MalformedCommandException;
 import bot.utils.exceptions.MissingConfigurationsException;
@@ -42,6 +42,10 @@ public class Chatbot {
         //Check for core configutations
         if (!config.containsKey("threadName") || !config.containsKey("username") || !config.containsKey("password")) {
             throw new MissingConfigurationsException("threadName", "username", "password");
+        }
+
+        if (config.containsKey("fulldebug")) {
+            System.setProperty("javax.net.debug", "all");
         }
 
         this.messageTimeout = config.containsKey("messageTimeout") ? Duration.ofMillis(Long.valueOf(config.get("messageTimeout"))) : Duration.ofMinutes(1);
@@ -145,6 +149,8 @@ public class Chatbot {
                 case "-d":
                     config.put("debug", "true");
                     break;
+                case "-fulldebug":
+                    config.put("fulldebug", "true");
                 case "-debug-threadName":
                 case "-debug-threadname":
                     config.put("debug-threadName", subArgs[1]);
