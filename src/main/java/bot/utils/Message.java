@@ -57,15 +57,20 @@ public class Message {
     }
 
     public static BufferedImage imageFromUrl(String url) throws SSLHandshakeException {
+        ImageInputStream imageInputStream = null;
+
         try {
             URL U = new URL(url);
             URLConnection urlConnection = U.openConnection();
             urlConnection.connect();
-            ImageInputStream imageInputStream = ImageIO.createImageInputStream(urlConnection.getInputStream());
+
+            imageInputStream = ImageIO.createImageInputStream(urlConnection.getInputStream());
             BufferedImage image = ImageIO.read(imageInputStream);
+
             if (image == null) {
                 return null;
             }
+
             double size = urlConnection.getContentLength();
 
             //Scale image to fit in size
@@ -85,6 +90,12 @@ public class Message {
                 throw (SSLHandshakeException) e;
             }
             return null;
+        } finally {
+            try {
+                assert imageInputStream != null;
+                imageInputStream.close();
+            } catch (IOException ignore) {
+            }
         }
     }
 
