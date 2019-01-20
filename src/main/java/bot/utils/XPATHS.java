@@ -55,4 +55,8 @@ public interface XPATHS {
      */
     String MESSAGE_SENDER_REAL_NAME = "./../../div/*/div[@data-tooltip-content]";
     //endregion
+
+    //region Anti-facebook protection
+    String CONTENT_NO_LONGER_AVAILABLE = "//a[contains(@class,'autofocus')]";
+    //endregion
 }

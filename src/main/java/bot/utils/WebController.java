@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 import static bot.utils.XPATHS.*;
 
@@ -140,10 +141,18 @@ public class WebController {
 
     //region Getters
     public Message getLatestMessage() {
-        WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
-        //Move mouse over message so messenger marks it as read
-        selectInputBox();
-        return Message.fromElement(chatbot, messageElement);
+        List<WebElement> contentNoLongerAvailable = webDriver.findElements(By.xpath(CONTENT_NO_LONGER_AVAILABLE));
+
+        if (contentNoLongerAvailable.isEmpty()) {
+            WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
+            //Move mouse over message so messenger marks it as read
+            selectInputBox();
+            return Message.fromElement(chatbot, messageElement);
+        } else {
+            System.out.println("Swatted a popup");
+            contentNoLongerAvailable.get(0).click();
+            return null;
+        }
     }
 
     public int getNumberOfMessagesDisplayed() {
@@ -172,9 +181,13 @@ public class WebController {
     }
 
     public void waitForNewMessage() throws TimeoutException {
-        messageWait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
-                By.xpath(MESSAGES_OTHERS),
-                getNumberOfMessagesDisplayed()));
+        messageWait.until(ExpectedConditions.or(
+                ExpectedConditions.numberOfElementsToBeMoreThan(
+                        By.xpath(MESSAGES_OTHERS),
+                        getNumberOfMessagesDisplayed()),
+                ExpectedConditions.elementToBeClickable(By.xpath(CONTENT_NO_LONGER_AVAILABLE))
+                )
+        );
     }
     //endregion
 }
