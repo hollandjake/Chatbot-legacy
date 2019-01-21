@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
+import static bot.utils.CONSTANTS.REPOSITORY;
 import static bot.utils.XPATHS.*;
 
 public class WebController {
@@ -71,6 +72,7 @@ public class WebController {
 
         Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
             e.printStackTrace();
+            GithubController.createIssue(REPOSITORY, config, e);
             screenshot();
             quit(false);
         });
@@ -111,7 +113,7 @@ public class WebController {
     public void sendMessage(Message message) {
         int myMessageCount = getNumberOfMyMessagesDisplayed();
         WebElement inputBox = selectInputBox();
-        if (config.containsKey("debug-messages")) {
+        if (config.containsKey("debug_messages")) {
             message.sendDebugMessage(inputBox);
         } else {
             message.sendMessage(inputBox);

@@ -2,13 +2,16 @@ package bot.dogbot;
 
 import bot.Chatbot;
 import bot.modules.*;
+import bot.utils.GithubController;
 import bot.utils.exceptions.MissingConfigurationsException;
 
 import java.util.HashMap;
 import java.util.List;
 
+import static bot.utils.CONSTANTS.REPOSITORY;
+
 public class Dogbot extends Chatbot {
-    private final String VERSION = "V4.0.0";
+    private final String VERSION = "V4.1.0";
 
     //region Overrides
     @Override
@@ -74,6 +77,7 @@ public class Dogbot extends Chatbot {
             bot = new Dogbot(config);
         } catch (MissingConfigurationsException e) {
             e.printStackTrace();
+            GithubController.createIssue(REPOSITORY, config, e);
             System.exit(1);
         }
     }

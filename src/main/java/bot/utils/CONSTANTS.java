@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Random;
 
 public interface CONSTANTS {
+    //region Strings
+    String REPOSITORY = "hollandjake/Chatbot";
+    //endregion
+
     //region Keyboard operations
     Clipboard CLIPBOARD = Toolkit.getDefaultToolkit().getSystemClipboard();
     String COPY = Keys.chord(Keys.CONTROL, "c");
