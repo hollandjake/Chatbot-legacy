@@ -55,7 +55,7 @@ public class WebController {
 
         //region Setup drivers
         ChromeOptions chromeOptions = new ChromeOptions();
-        chromeOptions.addArguments("mute-audio", "console");
+        chromeOptions.addArguments("mute-audio", "console", "disable-infobars");
         if (config.containsKey("headless")) {
             chromeOptions.addArguments("headless", "window-size=1920,1080");
         } else if (config.containsKey("maximised")) {
