@@ -37,12 +37,12 @@ public class Database {
     //endregion
 
     public Database(HashMap<String, String> config, Chatbot chatbot) throws MissingConfigurationsException {
-        if (!config.containsKey("dbUrl") || !config.containsKey("dbUsername") || !config.containsKey("dbPassword")) {
+        if (!config.containsKey("db_url") || !config.containsKey("db_username") || !config.containsKey("db_password")) {
             throw new MissingConfigurationsException("dbUrl", "dbUsername", "dbPassword");
         }
-        this.url = config.get("dbUrl");
-        this.username = config.get("dbUsername");
-        this.password = config.get("dbPassword");
+        this.url = config.get("db_url");
+        this.username = config.get("db_username");
+        this.password = config.get("db_password");
         this.chatbot = chatbot;
         this.connectionTimeout = chatbot.getMessageTimeout().toMillis();
 
@@ -50,12 +50,12 @@ public class Database {
     }
 
     public Database(HashMap<String, String> config) throws MissingConfigurationsException {
-        if (!config.containsKey("dbUrl") || !config.containsKey("dbUsername") || !config.containsKey("dbPassword")) {
-            throw new MissingConfigurationsException("dbUrl", "dbUsername", "dbPassword");
+        if (!config.containsKey("db_url") || !config.containsKey("db_username") || !config.containsKey("db_password")) {
+            throw new MissingConfigurationsException("db_url", "db_username", "db_password");
         }
-        this.url = config.get("dbUrl");
-        this.username = config.get("dbUsername");
-        this.password = config.get("dbPassword");
+        this.url = config.get("db_url");
+        this.username = config.get("db_username");
+        this.password = config.get("db_password");
         this.chatbot = null;
         this.connectionTimeout = Duration.ofMinutes(1).toMillis();
 

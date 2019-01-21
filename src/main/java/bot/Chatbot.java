@@ -12,7 +12,6 @@ import org.openqa.selenium.WebDriverException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -40,15 +39,15 @@ public class Chatbot {
 
     public Chatbot(HashMap<String, String> config) throws MissingConfigurationsException {
         //Check for core configutations
-        if (!config.containsKey("threadName") || !config.containsKey("username") || !config.containsKey("password")) {
-            throw new MissingConfigurationsException("threadName", "username", "password");
+        if (!config.containsKey("thread_name") || !config.containsKey("username") || !config.containsKey("password")) {
+            throw new MissingConfigurationsException("thread_name", "username", "password");
         }
 
-        if (config.containsKey("fulldebug")) {
+        if (config.containsKey("full_debug")) {
             System.setProperty("javax.net.debug", "all");
         }
 
-        this.messageTimeout = config.containsKey("messageTimeout") ? Duration.ofMillis(Long.valueOf(config.get("messageTimeout"))) : Duration.ofMinutes(1);
+        this.messageTimeout = config.containsKey("message_timeout") ? Duration.ofMillis(Long.valueOf(config.get("message_timeout"))) : Duration.ofMinutes(1);
         this.boot = new Boot(this);
         this.db = new Database(config, this);
         this.webController = new WebController(this, config);
@@ -56,7 +55,7 @@ public class Chatbot {
         //Output Shutdown code
         System.out.println("Shutdown code: " + shutdownCode);
 
-        this.threadName = config.containsKey("debug-threadName") ? config.get("debug-threadName") : config.get("threadName");
+        this.threadName = config.containsKey("debug_thread_name") ? config.get("debug_thread_name") : config.get("thread_name");
         this.threadId = db.getThreadIdFromName(threadName);
         loadModules();
         try {
@@ -69,7 +68,7 @@ public class Chatbot {
 
         //Run setup
         webController.login(config.get("username"), config.get("password"));
-        webController.gotoFacebookThread(config.get("threadName"));
+        webController.gotoFacebookThread(config.get("thread_name"));
 
         //Wait until messages have loaded
         webController.waitForMessagesToLoad();
@@ -116,60 +115,8 @@ public class Chatbot {
         HashMap<String, String> config = new HashMap<>();
 
         for (String arg : args) {
-            //Remove any extra quotes someone may have added
-            String[] subArgs = Arrays
-                    .stream(arg.split("="))
-                    .map(subArg -> subArg.replace("\"", ""))
-                    .toArray(String[]::new);
-
-            //Check for condtions
-            switch (subArgs[0]) {
-                case "config":
-                    config.put("config", subArgs[1]);
-                    break;
-                case "threadName":
-                case "threadname":
-                    config.put("threadName", subArgs[1]);
-                    break;
-                case "pass":
-                    config.put("password", subArgs[1]);
-                    break;
-                case "user":
-                    config.put("username", subArgs[1]);
-                    break;
-                case "dbUrl":
-                    config.put("dbUrl", subArgs[1]);
-                    break;
-                case "dbUser":
-                    config.put("dbUsername", subArgs[1]);
-                    break;
-                case "dbPass":
-                    config.put("dbPassword", subArgs[1]);
-                case "-debug":
-                case "-d":
-                    config.put("debug", "true");
-                    break;
-                case "-fulldebug":
-                    config.put("fulldebug", "true");
-                case "-debug-threadName":
-                case "-debug-threadname":
-                    config.put("debug-threadName", subArgs[1]);
-                    break;
-                case "-silent":
-                case "-s":
-                    config.put("silent", "true");
-                    break;
-                case "-debugMessages":
-                case "-dms":
-                    config.put("debug-messages", "true");
-                    break;
-                case "-headless":
-                    config.put("headless", "true");
-                    break;
-                case "-maximised":
-                    config.put("maximised", "true");
-                    break;
-            }
+            String[] subArgs = arg.split("=");
+            config.put(subArgs[0].replaceFirst("-", ""), subArgs.length == 2 ? subArgs[1] : "true");
         }
         return config;
     }
