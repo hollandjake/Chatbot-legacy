@@ -92,8 +92,9 @@ public class Message {
             return null;
         } finally {
             try {
-                assert imageInputStream != null;
-                imageInputStream.close();
+                if (imageInputStream != null) {
+                    imageInputStream.close();
+                }
             } catch (IOException ignore) {
             }
         }
