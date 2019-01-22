@@ -36,6 +36,7 @@ public class Dogbot extends Chatbot {
                 List.of("commands", "help"),
                 "https://github.com/hollandjake/Chatbot/blob/master/src/main/java/bot/dogbot/README.md",
                 "A list of commands can be found at"));
+
         //Image responses
         modules.put("Birds", new Birds(this));
         modules.put("Cats", new Cats(this));
@@ -74,7 +75,8 @@ public class Dogbot extends Chatbot {
 
         //Create bot
         try {
-            bot = new Dogbot(config);
+            throw new MissingConfigurationsException("Test");
+//            bot = new Dogbot(config);
         } catch (MissingConfigurationsException e) {
             e.printStackTrace();
             GithubController.createIssue(REPOSITORY, config, e);
