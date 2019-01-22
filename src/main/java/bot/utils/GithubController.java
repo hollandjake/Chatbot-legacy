@@ -54,8 +54,10 @@ public class GithubController {
 
                 HttpPost request = new HttpPost(issuePath + "?access_token=" + accessToken);
                 request.setEntity(new StringEntity(serialisedData));
-                client.execute(request);
-                System.out.println("Issue made for\n" + newTitle);
+                HttpResponse postResponse = client.execute(request);
+                JSONObject postData = new JSONObject(EntityUtils.toString(postResponse.getEntity()));
+
+                System.out.println("Issue #" + postData.getInt("number") + " made at " + postData.getString("html_url"));
             } catch (Exception e) {
                 e.printStackTrace();
             }
