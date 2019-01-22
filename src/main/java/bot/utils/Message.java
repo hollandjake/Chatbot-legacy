@@ -77,6 +77,10 @@ public class Message {
             double scaleFactor = Math.min(1, MAX_IMAGE_SIZE / size);
             int scaledWidth = (int) (image.getWidth() * scaleFactor);
             int scaledHeight = (int) (image.getHeight() * scaleFactor);
+
+            if (scaledWidth <= 0 || scaledHeight <= 0) {
+                return null;
+            }
             Image scaledImage = image.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
 
             BufferedImage bufferedImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
