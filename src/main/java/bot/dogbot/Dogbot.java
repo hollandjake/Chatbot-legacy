@@ -75,8 +75,7 @@ public class Dogbot extends Chatbot {
 
         //Create bot
         try {
-            throw new MissingConfigurationsException("Test");
-//            bot = new Dogbot(config);
+            bot = new Dogbot(config);
         } catch (MissingConfigurationsException e) {
             e.printStackTrace();
             GithubController.createIssue(REPOSITORY, config, e);
