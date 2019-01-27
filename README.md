@@ -4,6 +4,8 @@ Chatbot
 The Facebook messenger API doesn't allow you to have bots in group chats.  
 This bot aim's to solve that, by using a celenium based automation system to read messages from messenger and send responses.
 
+[![Release](https://jitpack.io/v/hollandjake/Chatbot.svg)](https://jitpack.io/#hollandjake/Chatbot)
+
 Commands
 ========
 

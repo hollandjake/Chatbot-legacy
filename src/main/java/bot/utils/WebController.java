@@ -2,15 +2,12 @@ package bot.utils;
 
 import bot.Chatbot;
 import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriverService;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,7 +18,6 @@ public class WebController {
     //region Variables
     private final Chatbot chatbot;
     private final Database db;
-    private final ChromeDriverService service;
     private final WebDriver webDriver;
     private final Actions keyboard;
     private final WebDriverWait wait;
@@ -35,23 +31,10 @@ public class WebController {
         this.config = config;
         this.db = chatbot.getDb();
 
-        ClassLoader classLoader = getClass().getClassLoader();
-        File driver = System.getProperty("os.name").toLowerCase().contains("windows") ?
-                new File(classLoader.getResource("drivers/windows/chromedriver.exe").getFile()) :
-                new File(classLoader.getResource("drivers/linux/chromedriver").getFile());
-        driver.setExecutable(true);
-
-        //region Create service
-        service = new ChromeDriverService.Builder()
-                .usingDriverExecutable(driver)
-                .usingAnyFreePort()
-                .build();
-        try {
-            service.start();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (config.containsKey("chromedriver")) {
+            System.setProperty("webdriver.chrome.driver", config.get("chromedriver"));
+            System.out.println("User provided webdriver");
         }
-        //endregion
 
         //region Setup drivers
         ChromeOptions chromeOptions = new ChromeOptions();
@@ -61,7 +44,7 @@ public class WebController {
         } else if (config.containsKey("maximised")) {
             chromeOptions.addArguments("start-maximized");
         }
-        webDriver = new RemoteWebDriver(service.getUrl(), chromeOptions);
+        webDriver = new ChromeDriver();
         keyboard = new Actions(webDriver);
         //endregion
 
@@ -82,7 +65,9 @@ public class WebController {
         if (withMessage) {
             chatbot.sendMessage("I'm off to sleep now, see you soon!");
         }
-        webDriver.quit();
+        if (webDriver != null) {
+            webDriver.quit();
+        }
         System.exit(0);
     }
 
