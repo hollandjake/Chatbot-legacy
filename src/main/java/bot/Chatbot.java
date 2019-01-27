@@ -6,9 +6,16 @@ import bot.utils.*;
 import bot.utils.exceptions.MalformedCommandException;
 import bot.utils.exceptions.MissingConfigurationsException;
 import com.google.errorprone.annotations.ForOverride;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -18,7 +25,6 @@ import java.util.Random;
 
 public class Chatbot {
     //region Constants
-    private final String VERSION = "V2.0.0";
     protected final HashMap<String, CommandModule> modules = new HashMap<>();
     protected final WebController webController;
 
@@ -124,7 +130,26 @@ public class Chatbot {
     //region ForOverrides
     @ForOverride
     public String getVersion() {
-        return VERSION;
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        Model model = null;
+        try {
+            try {
+                model = reader.read(new FileReader(new File("pom.xml")));
+            } catch (IOException e) {
+                model = reader.read(
+                        new InputStreamReader(
+                                getClass().getResourceAsStream(
+                                        "/META-INF/maven/de.scrum-master.stackoverflow/aspectj-introduce-method/pom.xml"
+                                )
+                        )
+                );
+            }
+        } catch (XmlPullParserException | IOException ignore) {
+        }
+        if (model != null) {
+            return model.getVersion();
+        }
+        return "";
     }
 
     @ForOverride
@@ -191,11 +216,6 @@ public class Chatbot {
     //endregion
 
     //region Getters & Setters
-
-    public String getVERSION() {
-        return VERSION;
-    }
-
     public HashMap<String, CommandModule> getModules() {
         return modules;
     }
@@ -248,4 +268,17 @@ public class Chatbot {
         return boot;
     }
     //endregion
+
+    public static void main(String[] args) {
+        Chatbot bot;
+        HashMap<String, String> config = createConfig(args);
+
+        //Create bot
+        try {
+            bot = new Chatbot(config);
+        } catch (MissingConfigurationsException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
 }
