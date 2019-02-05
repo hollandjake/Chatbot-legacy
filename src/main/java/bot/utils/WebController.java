@@ -39,6 +39,7 @@ public class WebController {
         //region Setup drivers
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("mute-audio", "console", "disable-infobars");
+		chromeOptions.addArguments("--lang=sl");
         if (config.containsKey("headless")) {
             chromeOptions.addArguments("headless", "window-size=1920,1080");
         } else if (config.containsKey("maximised")) {
@@ -81,7 +82,10 @@ public class WebController {
         wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_PASS)));
         webDriver.findElement(By.xpath(LOGIN_PASS)).sendKeys(password);
 
-        webDriver.findElement(By.xpath(COOKIES_CLOSE)).click();
+		List<WebElement> cookies = webDriver.findElements(By.xpath(COOKIES_CLOSE));
+		for (WebElement cookie : cookies) {
+			cookie.click();
+		}
 
         wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_BUTTON)));
         webDriver.findElement(By.xpath(LOGIN_BUTTON)).click();
