@@ -1,6 +1,7 @@
 package bot.utils;
 
 import bot.Chatbot;
+import bot.utils.message.Message;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -15,171 +16,171 @@ import static bot.utils.CONSTANTS.REPOSITORY;
 import static bot.utils.XPATHS.*;
 
 public class WebController {
-    //region Variables
-    private final Chatbot chatbot;
-    private final Database db;
-    private final WebDriver webDriver;
-    private final Actions keyboard;
-    private final WebDriverWait wait;
-    private final WebDriverWait messageWait;
+	//region Variables
+	private final Chatbot chatbot;
+	private final Database db;
+	private final WebDriver webDriver;
+	private final Actions keyboard;
+	private final WebDriverWait wait;
+	private final WebDriverWait messageWait;
 
-    private final HashMap<String, String> config;
-    //endregion
+	private final HashMap<String, String> config;
+	//endregion
 
-    public WebController(Chatbot chatbot, HashMap<String, String> config) {
-        this.chatbot = chatbot;
-        this.config = config;
-        this.db = chatbot.getDb();
+	public WebController(Chatbot chatbot, HashMap<String, String> config) {
+		this.chatbot = chatbot;
+		this.config = config;
+		this.db = chatbot.getDb();
 
-        if (config.containsKey("chromedriver")) {
-            System.setProperty("webdriver.chrome.driver", config.get("chromedriver"));
-            System.out.println("User provided webdriver");
-        }
+		if (config.containsKey("chromedriver")) {
+			System.setProperty("webdriver.chrome.driver", config.get("chromedriver"));
+			System.out.println("User provided webdriver");
+		}
 
-        //region Setup drivers
-        ChromeOptions chromeOptions = new ChromeOptions();
-        chromeOptions.addArguments("mute-audio", "console", "disable-infobars");
+		//region Setup drivers
+		ChromeOptions chromeOptions = new ChromeOptions();
+		chromeOptions.addArguments("mute-audio", "console", "disable-infobars");
 		chromeOptions.addArguments("--lang=sl");
-        if (config.containsKey("headless")) {
-            chromeOptions.addArguments("headless", "window-size=1920,1080");
-        } else if (config.containsKey("maximised")) {
-            chromeOptions.addArguments("start-maximized");
-        }
-        webDriver = new ChromeDriver();
-        keyboard = new Actions(webDriver);
-        //endregion
+		if (config.containsKey("headless")) {
+			chromeOptions.addArguments("headless", "window-size=1920,1080");
+		} else if (config.containsKey("maximised")) {
+			chromeOptions.addArguments("start-maximized");
+		}
+		webDriver = new ChromeDriver();
+		keyboard = new Actions(webDriver);
+		//endregion
 
-        //region Setup waits
-        wait = new WebDriverWait(webDriver, 30);
-        messageWait = new WebDriverWait(webDriver, chatbot.getMessageTimeout().getSeconds(), chatbot.getRefreshRate());
-        //endregion
+		//region Setup waits
+		wait = new WebDriverWait(webDriver, 30);
+		messageWait = new WebDriverWait(webDriver, chatbot.getMessageTimeout().getSeconds(), chatbot.getRefreshRate());
+		//endregion
 
-        Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
-            e.printStackTrace();
-            GithubController.createIssue(REPOSITORY, config, e);
-            screenshot();
-            quit(false);
-        });
-    }
+		Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
+			e.printStackTrace();
+			GithubController.createIssue(REPOSITORY, config, e);
+			screenshot();
+			quit(false);
+		});
+	}
 
-    public void quit(boolean withMessage) {
-        if (withMessage) {
-            chatbot.sendMessage("I'm off to sleep now, see you soon!");
-        }
-        if (webDriver != null) {
-            webDriver.quit();
-        }
-        System.exit(0);
-    }
+	public void quit(boolean withMessage) {
+		if (withMessage) {
+			chatbot.sendMessage("I'm off to sleep now, see you soon!");
+		}
+		if (webDriver != null) {
+			webDriver.quit();
+		}
+		System.exit(0);
+	}
 
-    //region Login
-    public void login(String username, String password) {
-        //Goto page
-        webDriver.get("https://www.messenger.com");
+	//region Login
+	public void login(String username, String password) {
+		//Goto page
+		webDriver.get("https://www.messenger.com");
 
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_EMAIL)));
-        webDriver.findElement(By.xpath(LOGIN_EMAIL)).sendKeys(username);
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_PASS)));
-        webDriver.findElement(By.xpath(LOGIN_PASS)).sendKeys(password);
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_EMAIL)));
+		webDriver.findElement(By.xpath(LOGIN_EMAIL)).sendKeys(username);
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_PASS)));
+		webDriver.findElement(By.xpath(LOGIN_PASS)).sendKeys(password);
 
 		List<WebElement> cookies = webDriver.findElements(By.xpath(COOKIES_CLOSE));
 		for (WebElement cookie : cookies) {
 			cookie.click();
 		}
 
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_BUTTON)));
-        webDriver.findElement(By.xpath(LOGIN_BUTTON)).click();
-    }
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(LOGIN_BUTTON)));
+		webDriver.findElement(By.xpath(LOGIN_BUTTON)).click();
+	}
 
-    public void gotoFacebookThread(String threadId) {
-        Human me = db.getHumanFromName(getMyRealName());
-        chatbot.setMe(me);
-        webDriver.get("https://www.messenger.com/t/" + threadId);
-    }
-    //endregion
+	public void gotoFacebookThread(String threadId) {
+		Human me = db.getHumanFromName(getMyRealName());
+		chatbot.setMe(me);
+		webDriver.get("https://www.messenger.com/t/" + threadId);
+	}
+	//endregion
 
-    //region Sending messages
-    public void sendMessage(Message message) {
-        int myMessageCount = getNumberOfMyMessagesDisplayed();
-        WebElement inputBox = selectInputBox();
-        if (config.containsKey("debug_messages")) {
-            message.sendDebugMessage(inputBox);
-        } else {
-            message.sendMessage(inputBox);
-        }
-        //Wait for message to be sent
-        wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.xpath(MESSAGES_MINE),
-                myMessageCount));
-    }
+	//region Sending messages
+	public void sendMessage(Message message) {
+		int myMessageCount = getNumberOfMyMessagesDisplayed();
+		WebElement inputBox = selectInputBox();
+		if (config.containsKey("debug_messages")) {
+			message.sendDebugMessage(inputBox);
+		} else {
+			message.sendMessage(inputBox);
+		}
+		//Wait for message to be sent
+		wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.xpath(MESSAGES_MINE),
+			myMessageCount));
+	}
 
-    public void screenshot() {
-        ScreenshotUtil.capture(webDriver);
-    }
+	public void screenshot() {
+		ScreenshotUtil.capture(webDriver);
+	}
 
-    private WebElement selectInputBox() {
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(INPUT_FIELD)));
-        WebElement inputBoxElement = webDriver.findElement(By.xpath(INPUT_FIELD));
+	private WebElement selectInputBox() {
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(INPUT_FIELD)));
+		WebElement inputBoxElement = webDriver.findElement(By.xpath(INPUT_FIELD));
 
-        try {
-            inputBoxElement.click();
-            return inputBoxElement;
-        } catch (WebDriverException e) {
-            webDriver.navigate().refresh();
-            return selectInputBox();
-        }
-    }
-    //endregion
+		try {
+			inputBoxElement.click();
+			return inputBoxElement;
+		} catch (WebDriverException e) {
+			webDriver.navigate().refresh();
+			return selectInputBox();
+		}
+	}
+	//endregion
 
-    //region Getters
-    public Message getLatestMessage() {
-        List<WebElement> contentNoLongerAvailable = webDriver.findElements(By.xpath(CONTENT_NO_LONGER_AVAILABLE));
+	//region Getters
+	public Message getLatestMessage() {
+		List<WebElement> contentNoLongerAvailable = webDriver.findElements(By.xpath(CONTENT_NO_LONGER_AVAILABLE));
 
-        if (contentNoLongerAvailable.isEmpty()) {
-            WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
-            //Move mouse over message so messenger marks it as read
-            selectInputBox();
-            return Message.fromElement(chatbot, messageElement);
-        } else {
-            System.out.println("Swatted a popup");
-            contentNoLongerAvailable.get(0).click();
-            return null;
-        }
-    }
+		if (contentNoLongerAvailable.isEmpty()) {
+			WebElement messageElement = webDriver.findElement(By.xpath(MESSAGES_OTHERS_RECENT));
+			//Move mouse over message so messenger marks it as read
+			selectInputBox();
+			return Message.fromElement(chatbot, messageElement);
+		} else {
+			System.out.println("Swatted a popup");
+			contentNoLongerAvailable.get(0).click();
+			return null;
+		}
+	}
 
-    public int getNumberOfMessagesDisplayed() {
-        return webDriver.findElements(By.xpath(MESSAGES_OTHERS)).size();
-    }
+	public int getNumberOfMessagesDisplayed() {
+		return webDriver.findElements(By.xpath(MESSAGES_OTHERS)).size();
+	}
 
-    public int getNumberOfMyMessagesDisplayed() {
-        return webDriver.findElements(By.xpath(MESSAGES_MINE)).size();
-    }
+	public int getNumberOfMyMessagesDisplayed() {
+		return webDriver.findElements(By.xpath(MESSAGES_MINE)).size();
+	}
 
-    public String getMyRealName() {
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(SETTINGS_COG)));
-        webDriver.findElement(By.xpath(SETTINGS_COG)).click();
-        wait.until(ExpectedConditions.elementToBeClickable(By.xpath(SETTINGS_DROPDOWN)));
-        webDriver.findElement(By.xpath(SETTINGS_DROPDOWN)).click();
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(MY_REAL_NAME)));
-        String name = webDriver.findElement(By.xpath(MY_REAL_NAME)).getText();
-        webDriver.findElement(By.xpath(SETTINGS_DONE)).click();
-        return name;
-    }
-    //endregion
+	public String getMyRealName() {
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(SETTINGS_COG)));
+		webDriver.findElement(By.xpath(SETTINGS_COG)).click();
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(SETTINGS_DROPDOWN)));
+		webDriver.findElement(By.xpath(SETTINGS_DROPDOWN)).click();
+		wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(MY_REAL_NAME)));
+		String name = webDriver.findElement(By.xpath(MY_REAL_NAME)).getText();
+		webDriver.findElement(By.xpath(SETTINGS_DONE)).click();
+		return name;
+	}
+	//endregion
 
-    //region Waits
-    public void waitForMessagesToLoad() {
-        messageWait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(MESSAGE_CONTAINER)));
-    }
+	//region Waits
+	public void waitForMessagesToLoad() {
+		messageWait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(MESSAGE_CONTAINER)));
+	}
 
-    public void waitForNewMessage() throws TimeoutException {
-        messageWait.until(ExpectedConditions.or(
-                ExpectedConditions.numberOfElementsToBeMoreThan(
-                        By.xpath(MESSAGES_OTHERS),
-                        getNumberOfMessagesDisplayed()),
-                ExpectedConditions.elementToBeClickable(By.xpath(CONTENT_NO_LONGER_AVAILABLE))
-                )
-        );
-    }
-    //endregion
+	public void waitForNewMessage() throws TimeoutException {
+		messageWait.until(ExpectedConditions.or(
+			ExpectedConditions.numberOfElementsToBeMoreThan(
+				By.xpath(MESSAGES_OTHERS),
+				getNumberOfMessagesDisplayed()),
+			ExpectedConditions.elementToBeClickable(By.xpath(CONTENT_NO_LONGER_AVAILABLE))
+			)
+		);
+	}
+	//endregion
 }
 

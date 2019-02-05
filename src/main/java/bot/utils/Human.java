@@ -1,47 +1,72 @@
 package bot.utils;
 
+import bot.utils.message.MessageComponent;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebElement;
+
+import java.awt.datatransfer.StringSelection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class Human {
-    //region Constants
-    private final String name;
-    private final int ID;
-    //endregion
+import static bot.utils.CONSTANTS.*;
 
-    //region Constructors
-    public Human(String name, int id) {
-        this.name = name;
-        this.ID = id;
-    }
+public class Human implements MessageComponent {
+	//region Constants
+	private final String name;
+	private final String url;
+	private final int ID;
+	//endregion
 
-    public Human(ResultSet resultSet) throws SQLException {
-        this.ID = resultSet.getInt("H_ID");
-        this.name = resultSet.getString("H_name");
-    }
-    //endregion
+	//region Constructors
+	public Human(String name, String url, int id) {
+		this.name = name;
+		this.url = url;
+		this.ID = id;
+	}
 
-    //region Getters and Setters
-    public String getName() {
-        return name;
-    }
+	public Human(ResultSet resultSet) throws SQLException {
+		this.ID = resultSet.getInt("H_ID");
+		this.url = resultSet.getString("H_url");
+		this.name = resultSet.getString("H_name");
+	}
+	//endregion
 
-    public int getID() {
-        return ID;
-    }
-    //endregion
+	//region Getters and Setters
+	public String getName() {
+		return name;
+	}
 
-    public String toString() {
-        return name;
-    }
+	public String getUrl() {
+		return url;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+	public int getID() {
+		return ID;
+	}
+	//endregion
 
-        Human human = (Human) o;
+	public String toString() {
+		return name;
+	}
 
-        return ID == human.ID;
-    }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Human human = (Human) o;
+
+		return ID == human.ID;
+	}
+
+	@Override
+	public void send(WebElement inputBox) {
+		CLIPBOARD.setContents(new StringSelection(name), null);
+		inputBox.sendKeys(PASTE + Keys.ENTER);
+	}
+
+	@Override
+	public String combine() {
+		return TAG_SYMBOL + name;
+	}
 }
