@@ -132,6 +132,10 @@ public class Message {
 			.collect(Collectors.joining(COMPOSITE_MESSAGE_DIVIDER));
 	}
 
+	public String combineComponents() {
+		return combineComponents(messageComponents);
+	}
+
 	//region Send message
 	private static void sendMessage(WebElement inputBox, List<MessageComponent> messageComponents) {
 		if (messageComponents != null) {
@@ -142,10 +146,6 @@ public class Message {
 		inputBox.sendKeys(Keys.ENTER);
 	}
 	//endregion
-
-	public String combineComponents() {
-		return combineComponents(messageComponents);
-	}
 
 	public void sendMessage(WebElement inputBox) {
 		sendMessage(inputBox, messageComponents);
