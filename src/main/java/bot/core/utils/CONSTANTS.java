@@ -1,4 +1,4 @@
-package bot.utils;
+package bot.core.utils;
 
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -33,9 +33,9 @@ public interface CONSTANTS {
 
 	Random RANDOM = new Random();
 	//region Message
-	String COMPOSITE_MESSAGE_DIVIDER = "\uE000";
-	Character IMAGE_SYMBOL = '\uE000';
-	Character TAG_SYMBOL = '@';
+	String COMPOSITE_MESSAGE_DIVIDER = "\uFFDC";
+	Character IMAGE_SYMBOL = '\uFFB1';
+	Character TAG_SYMBOL = '\uFFB2';
 
 	static String ACTIONIFY(String arg) {
 		return "(?i)^!\\s*" + arg + "$";

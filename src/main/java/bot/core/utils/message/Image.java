@@ -1,41 +1,55 @@
-package bot.utils.message;
+package bot.core.utils.message;
 
-import org.openqa.selenium.WebElement;
+import bot.core.Chatbot;
+import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
 import javax.net.ssl.SSLHandshakeException;
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.datatransfer.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
-import static bot.utils.CONSTANTS.*;
+import static bot.core.utils.CONSTANTS.*;
+import static bot.core.utils.XPATHS.MESSAGE_IMAGE;
 
 public class Image implements MessageComponent, Transferable {
-	private final java.awt.Image image;
+	private final int ID;
 	private final String url;
+	private final java.awt.Image image;
 
 	public Image(String url) throws SSLHandshakeException {
+		this.ID = 0;
 		this.url = url;
 		this.image = fromUrl(url);
 	}
 
-	public Image(ResultSet resultSet) throws SSLHandshakeException {
+	public Image(ResultSet resultSet) {
+		int ID = 0;
 		String url = null;
 		try {
+			ID = resultSet.getInt("I_ID");
 			url = resultSet.getString("I_url");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		this.ID = ID;
 		this.url = url;
-		this.image = fromUrl(this.url);
+		BufferedImage image;
+		try {
+			image = fromUrl(this.url);
+		} catch (SSLHandshakeException e) {
+			image = null;
+		}
+		this.image = image;
 	}
 
 	private static BufferedImage fromUrl(String url) throws SSLHandshakeException {
@@ -90,6 +104,25 @@ public class Image implements MessageComponent, Transferable {
 		}
 	}
 
+	public static ArrayList<MessageComponent> fromElement(Chatbot chatbot, WebElement webElement) {
+		List<WebElement> imageElements = webElement.findElements(By.xpath(MESSAGE_IMAGE));
+		ArrayList<MessageComponent> imageComponents = new ArrayList<>();
+		if (imageElements.isEmpty()) {
+			return imageComponents;
+		} else {
+			for (WebElement imageElement : imageElements) {
+				String imageUrl = imageElement.getAttribute("src");
+				try {
+					Image image = new Image(imageUrl);
+					imageComponents.add(chatbot.saveImage(image));
+				} catch (SSLHandshakeException e) {
+					imageComponents.add(new Text(imageUrl));
+				}
+			}
+			return imageComponents;
+		}
+	}
+
 	//region Overrides
 	@Override
 	public DataFlavor[] getTransferDataFlavors() {
@@ -121,14 +154,26 @@ public class Image implements MessageComponent, Transferable {
 	}
 
 	@Override
-	public void send(WebElement inputBox) {
+	public void send(WebElement inputBox, WebDriverWait wait) {
 		CLIPBOARD.setContents(this, null);
-		inputBox.sendKeys(PASTE);
+		inputBox.sendKeys(PASTE + Keys.ENTER);
 	}
 
 	@Override
 	public String combine() {
-		return "\uE000" + url;
+		return IMAGE_SYMBOL + String.valueOf(ID);
+	}
+
+	public int getID() {
+		return ID;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public java.awt.Image getImage() {
+		return image;
 	}
 	//endregion
 

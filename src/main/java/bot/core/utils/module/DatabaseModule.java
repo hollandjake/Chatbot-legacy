@@ -1,4 +1,4 @@
-package bot.utils;
+package bot.core.utils.module;
 
 import java.sql.Connection;
 import java.sql.SQLException;

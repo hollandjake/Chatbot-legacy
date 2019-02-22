@@ -1,68 +1,58 @@
 package bot.modules;
 
-import bot.Chatbot;
-import bot.utils.CommandModule;
-import bot.utils.exceptions.MalformedCommandException;
-import bot.utils.message.Message;
-import bot.utils.message.MessageComponent;
+import bot.core.Chatbot;
+import bot.core.utils.exceptions.MalformedCommandException;
+import bot.core.utils.message.*;
+import bot.core.utils.module.CommandModule;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static bot.utils.CONSTANTS.ACTIONIFY;
-import static bot.utils.CONSTANTS.DEACTIONIFY;
+import static bot.core.utils.CONSTANTS.ACTIONIFY;
 
 public class Shutdown implements CommandModule {
 	//region Constants
 	private final String SHUTDOWN_REGEX = ACTIONIFY("shutdown (\\d*)");
+
+	//Put all regexes into a list
+	private final List<String> regexes = Collections.singletonList(SHUTDOWN_REGEX);
+
+	private final Text shutdownCode;
 	private final Chatbot chatbot;
 	//endregion
 
 	public Shutdown(Chatbot chatbot) {
 		this.chatbot = chatbot;
+		this.shutdownCode = new Text(Integer.toString(new Random().nextInt(99999)));
 	}
 
 	//region Overrides
 	@Override
 	public boolean process(Message message) throws MalformedCommandException {
-		String match = getMatch(message);
-		if (match.equals(SHUTDOWN_REGEX)) {
-			for (MessageComponent messageComponent : message.getMessageComponents()) {
-				if (messageComponent.matches(SHUTDOWN_REGEX)) {
-					return SHUTDOWN_REGEX;
+		CommandMatch match = CommandMatch.findMatch(regexes, message);
+		if (match != null) {
+			if (match.regexMatch(SHUTDOWN_REGEX)) {
+				Text component = (Text) match.getMatchedComponent();
+				Matcher matcher = Pattern.compile(SHUTDOWN_REGEX).matcher(component.getText());
+				if (matcher.find() && matcher.group(1).equals(shutdownCode.getText())) {
+					chatbot.quit();
+					return true;
+				} else {
+					throw new MalformedCommandException();
 				}
 			}
-			Matcher matcher = Pattern.compile(SHUTDOWN_REGEX).matcher(message.getMessageComponents().get(0).combine());
-			if (matcher.find() && matcher.group(1).equals(chatbot.getShutdownCode())) {
-				chatbot.quit();
-				return true;
-			} else {
-				throw new MalformedCommandException();
-			}
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	@Override
-	@SuppressWarnings("Duplicates")
-	public String getMatch(Message message) {
-		for (MessageComponent messageComponent : message.getMessageComponents()) {
-			if (messageComponent.matches(SHUTDOWN_REGEX)) {
-				return SHUTDOWN_REGEX;
-			}
-		}
-		return "";
+	public List<String> getRegexes() {
+		return regexes;
 	}
-
-	@Override
-	@SuppressWarnings("Duplicates")
-	public ArrayList<String> getCommands() {
-		ArrayList<String> commands = new ArrayList<>();
-		commands.add(DEACTIONIFY(SHUTDOWN_REGEX));
-		return commands;
-	}
-
 	//endregion
+
+	public int getShutdownCode() {
+		return Integer.parseInt(shutdownCode.getText());
+	}
 }

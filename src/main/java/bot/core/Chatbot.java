@@ -1,17 +1,13 @@
-package bot;
+package bot.core;
 
+import bot.core.utils.Database;
+import bot.core.utils.WebController;
+import bot.core.utils.exceptions.MalformedCommandException;
+import bot.core.utils.exceptions.MissingConfigurationsException;
+import bot.core.utils.message.*;
+import bot.core.utils.module.CommandModule;
 import bot.modules.Shutdown;
 import bot.modules.*;
-import bot.utils.CommandModule;
-import bot.utils.Database;
-import bot.utils.Human;
-import bot.utils.WebController;
-import bot.utils.exceptions.MalformedCommandException;
-import bot.utils.exceptions.MissingConfigurationsException;
-import bot.utils.message.Image;
-import bot.utils.message.Message;
-import bot.utils.message.MessageComponent;
-import bot.utils.message.Text;
 import com.google.errorprone.annotations.ForOverride;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -20,27 +16,21 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 
 import javax.net.ssl.SSLHandshakeException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Chatbot {
 	//region Constants
 	protected final HashMap<String, CommandModule> modules = new HashMap<>();
 	protected final WebController webController;
 
-	protected final Database db;
-	protected final Boot boot;
-	protected final String threadName;
-	private final String shutdownCode = Integer.toString(new Random().nextInt(99999));
+	private final Database db;
+	private final Boot bootModule;
+	private final Shutdown shutdownModule;
+	private final String threadName;
 	private final Duration messageTimeout;
 	private final LocalDateTime startupTime = LocalDateTime.now();
 	private final long refreshRate = 100;
@@ -61,12 +51,13 @@ public class Chatbot {
 		}
 
 		this.messageTimeout = config.containsKey("message_timeout") ? Duration.ofMillis(Long.valueOf(config.get("message_timeout"))) : Duration.ofMinutes(1);
-		this.boot = new Boot(this);
+		this.bootModule = new Boot(this);
+		this.shutdownModule = new Shutdown(this);
 		this.db = new Database(config, this);
 		this.webController = new WebController(this, config);
 
 		//Output Shutdown code
-		System.out.println("Shutdown code: " + shutdownCode);
+		System.out.println("Shutdown code: " + shutdownModule.getShutdownCode());
 
 		this.threadName = config.get("thread_name");
 		loadModules();
@@ -85,11 +76,12 @@ public class Chatbot {
 		//Wait until messages have loaded
 		webController.waitForMessagesToLoad();
 
+		System.out.println("System is running");
+
 		//Init message
 		if (!config.containsKey("silent")) {
-			initMessage();
+			bootModule.sendBootMessage();
 		}
-		System.out.println("System is running");
 
 		while (running) {
 			try {
@@ -102,10 +94,15 @@ public class Chatbot {
 				if (config.containsKey("debug")) {
 					System.out.println(newMessage);
 				}
+				if (config.containsKey("echo")) {
+					sendMessage(newMessage);
+				}
 				//Handle options
 				try {
 					for (CommandModule commandModule : modules.values()) {
-						commandModule.process(newMessage);
+						if (commandModule.process(newMessage)) {
+							break;
+						}
 					}
 				} catch (MalformedCommandException e) {
 					sendMessage("There seems to be an issue with your command");
@@ -187,11 +184,6 @@ public class Chatbot {
 	}
 	//endregion
 
-	@ForOverride
-	protected void initMessage() {
-		sendMessage("Chatbot " + getVersion() + " is online!");
-	}
-
 	//region Send Message
 	public void sendMessage(Message message) {
 		webController.sendMessage(message);
@@ -221,13 +213,14 @@ public class Chatbot {
 	}
 	//endregion
 
-	public boolean containsCommand(Message message) {
+	public CommandMatch containsCommand(Message message) {
 		for (CommandModule commandModule : modules.values()) {
-			if (!commandModule.getMatch(message).equals("")) {
-				return true;
+			CommandMatch match = CommandMatch.findMatch(commandModule.getRegexes(), message);
+			if (match != null) {
+				return match;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	public void screenshot() {
@@ -239,34 +232,34 @@ public class Chatbot {
 	}
 
 	//region Database commands
+	public Human saveHuman(Human human) {
+		return db.saveHuman(human.getName(), human.getUrl());
+	}
+
+	public Image saveImage(Image image) {
+		return db.saveImage(image.getUrl());
+	}
+
+	public Message saveMessage(Message message) {
+		return db.saveMessage(message.getSender(), message.getMessageComponents());
+	}
+
 	public int getMessageCount() {
 		return db.getMessageCount();
 	}
 
-	public List<Human> getAllHumans() {
-		return db.getAllHumans();
-	}
-	//endregion
-
 	public Human getHumanFromUrl(String url) {
 		return db.getHumanFromUrl(url);
 	}
+	//endregion
 
 	//region Getters & Setters
 	public HashMap<String, CommandModule> getModules() {
 		return modules;
 	}
 
-	public WebController getWebController() {
-		return webController;
-	}
-
 	public Database getDb() {
 		return db;
-	}
-
-	public String getShutdownCode() {
-		return shutdownCode;
 	}
 
 	public Duration getMessageTimeout() {
@@ -281,24 +274,20 @@ public class Chatbot {
 		return refreshRate;
 	}
 
-	public boolean isRunning() {
-		return running;
-	}
-
-	public String getThreadName() {
-		return threadName;
+	public void setMe(Human me) {
+		this.me = me;
 	}
 
 	public Human getMe() {
 		return me;
 	}
 
-	public void setMe(Human me) {
-		this.me = me;
+	public Boot getBootModule() {
+		return bootModule;
+	}
+
+	public Shutdown getShutdownModule() {
+		return shutdownModule;
 	}
 	//endregion
-
-	public Boot getBootModule() {
-		return boot;
-	}
 }

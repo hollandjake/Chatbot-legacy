@@ -1,18 +1,15 @@
-package bot.utils;
+package bot.core.utils;
 
-import bot.Chatbot;
-import bot.utils.exceptions.MissingConfigurationsException;
-import bot.utils.message.Image;
-import bot.utils.message.Message;
-import bot.utils.message.MessageComponent;
+import bot.core.Chatbot;
+import bot.core.utils.exceptions.MissingConfigurationsException;
+import bot.core.utils.message.*;
+import bot.core.utils.module.CommandModule;
+import bot.core.utils.module.DatabaseModule;
 
-import javax.net.ssl.SSLHandshakeException;
+import java.sql.Date;
 import java.sql.*;
 import java.time.Duration;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Database {
 	private final String url;
@@ -23,19 +20,20 @@ public class Database {
 	private Connection connection;
 	private final Thread shutdownThread = new Thread(this::closeConnection);
 	private java.util.Date lastConnectionRequest;
+
 	//region Queries
-	private PreparedStatement GET_ALL_HUMANS_STMT;
 	private PreparedStatement GET_HUMAN_FROM_ID_STMT;
 	private PreparedStatement GET_HUMAN_FROM_NAME_STMT;
 	private PreparedStatement GET_HUMAN_FROM_URL_STMT;
-	private PreparedStatement SAVE_HUMAN_STMT;
+	private CallableStatement SAVE_HUMAN_STMT;
 
-	private PreparedStatement GET_MESSAGE_FROM_ID_STMT;
 	private PreparedStatement GET_MESSAGE_WITH_MESSAGE_STMT;
 	private PreparedStatement GET_NUM_MESSAGES_STMT;
-	private PreparedStatement SAVE_MESSAGE_STMT;
-	private PreparedStatement SAVE_MESSAGE_WITH_DATE_STMT;
+	private CallableStatement SAVE_MESSAGE_STMT;
+	private CallableStatement SAVE_MESSAGE_WITH_DATE_STMT;
+
 	private PreparedStatement GET_IMAGE_FROM_ID_STMT;
+	private CallableStatement SAVE_IMAGE_STMT;
 
 	//endregion
 
@@ -139,21 +137,7 @@ public class Database {
 	//endregion
 
 	public void createQueries(Chatbot chatbot) throws SQLException {
-		if (chatbot != null) {
-			for (CommandModule module : chatbot.getModules().values()) {
-				if (module instanceof DatabaseModule) {
-					((DatabaseModule) module).prepareStatements(connection);
-				}
-			}
-			chatbot.getBootModule().prepareStatements(connection);
-		}
-
-		GET_ALL_HUMANS_STMT = connection.prepareStatement("" +
-			"SELECT" +
-			"   H.ID AS H_ID," +
-			"   H.name AS H_name " +
-			"FROM Humans H");
-
+		//region Human
 		GET_HUMAN_FROM_ID_STMT = connection.prepareStatement("" +
 			"SELECT " +
 			"   H.ID as H_ID," +
@@ -175,25 +159,16 @@ public class Database {
 			"   H.url as H_url " +
 			"FROM Humans H " +
 			"WHERE H.url = ?");
-		SAVE_HUMAN_STMT = connection.prepareStatement("INSERT INTO Humans (name) VALUES (?)");
+		SAVE_HUMAN_STMT = connection.prepareCall("{CALL SaveHuman(?,?)}");
+		//endregion
 
-		GET_MESSAGE_FROM_ID_STMT = connection.prepareStatement("" +
-			"SELECT" +
-			"   M.ID as M_ID," +
-			"   H.ID as H_ID," +
-			"   H.name as H_name," +
-			"   M.message as M_message," +
-			"   M.date as M_date " +
-			"FROM Messages M " +
-			"JOIN Humans H on M.sender_id = H.ID " +
-			"LEFT JOIN Images I on M.image_id = I.ID " +
-			"WHERE M.thread_id = ? AND M.ID = ? " +
-			"LIMIT 1");
+		//<editor-fold desc="Description">
 		GET_MESSAGE_WITH_MESSAGE_STMT = connection.prepareStatement("" +
 			"SELECT" +
 			"   M.ID as M_ID," +
 			"   H.ID as H_ID," +
 			"   H.name as H_name," +
+			"	H.url as H_url," +
 			"   M.message as M_message," +
 			"   M.date as M_date " +
 			"FROM Messages M " +
@@ -203,39 +178,30 @@ public class Database {
 		GET_NUM_MESSAGES_STMT = connection.prepareStatement("" +
 			"SELECT COUNT(M.ID) " +
 			"FROM Messages M");
-		SAVE_MESSAGE_STMT = connection.prepareStatement("" +
-			"INSERT INTO Messages (sender_id, date, message) " +
-			"VALUES (?, NOW(), ?)");
-		SAVE_MESSAGE_WITH_DATE_STMT = connection.prepareStatement("" +
-			"INSERT INTO Messages (sender_id, date, message) " +
-			"VALUES (?, ?, ?)");
+
+		SAVE_MESSAGE_STMT = connection.prepareCall("{CALL SaveMessage(?, NOW(), ?)}");
+		SAVE_MESSAGE_WITH_DATE_STMT = connection.prepareCall("{CALL SaveMessage(?, ?, ?)}");
+		//</editor-fold>
 
 		GET_IMAGE_FROM_ID_STMT = connection.prepareStatement("" +
 			"SELECT " +
-			"   I.url as I_url " +
+			"   I.ID as I_ID," +
+			"	I.url as I_url " +
 			"FROM Images I " +
 			"WHERE I.ID = ?");
+		SAVE_IMAGE_STMT = connection.prepareCall("{CALL SaveImage(?)}");
+
+		if (chatbot != null) {
+			for (CommandModule module : chatbot.getModules().values()) {
+				if (module instanceof DatabaseModule) {
+					((DatabaseModule) module).prepareStatements(connection);
+				}
+			}
+			chatbot.getBootModule().prepareStatements(connection);
+		}
 	}
-
-	//region System
-
-	//endregion
 
 	//region Humans
-	public List<Human> getAllHumans() {
-		List<Human> humans = new ArrayList<>();
-		try {
-			checkConnection();
-			ResultSet resultSet = GET_ALL_HUMANS_STMT.executeQuery();
-			while (resultSet.next()) {
-				humans.add(new Human(resultSet));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return humans;
-	}
-
 	public Human getHumanFromID(int id) {
 		try {
 			checkConnection();
@@ -278,33 +244,23 @@ public class Database {
 		return null;
 	}
 
-	public void saveHuman(String name, String url) {
+	public Human saveHuman(String name, String url) {
 		try {
 			checkConnection();
-			SAVE_HUMAN_STMT.setString(1, name);
-			SAVE_HUMAN_STMT.setString(2, url);
-			SAVE_HUMAN_STMT.execute();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	//endregion
-
-	//region Messages
-	public Message getMessage(int messageId) {
-		try {
-			checkConnection();
-			GET_MESSAGE_FROM_ID_STMT.setInt(1, messageId);
-			ResultSet resultSet = GET_MESSAGE_FROM_ID_STMT.executeQuery();
+			SAVE_HUMAN_STMT.setString(1, url);
+			SAVE_HUMAN_STMT.setString(2, name);
+			ResultSet resultSet = SAVE_HUMAN_STMT.executeQuery();
 			if (resultSet.next()) {
-				return new Message(this, resultSet);
+				return new Human(resultSet);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
+	//endregion
 
+	//region Message
 	public ArrayList<Message> getMessagesWithMessageLike(String query) {
 		ArrayList<Message> messages = new ArrayList<>();
 		try {
@@ -312,7 +268,7 @@ public class Database {
 			GET_MESSAGE_WITH_MESSAGE_STMT.setString(1, query);
 			ResultSet resultSet = GET_MESSAGE_WITH_MESSAGE_STMT.executeQuery();
 			while (resultSet.next()) {
-				messages.add(new Message(this, resultSet));
+				messages.add(new Message(chatbot, resultSet));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -333,44 +289,59 @@ public class Database {
 		return null;
 	}
 
-	public ResultSet saveMessage(String senderName, List<MessageComponent> messageComponents) {
+	public Message saveMessage(Human sender, List<MessageComponent> messageComponents) {
 		try {
 			checkConnection();
-			SAVE_MESSAGE_STMT.setString(1, senderName);
-			SAVE_MESSAGE_STMT.setString(2, Message.combineComponents(messageComponents));
-			return SAVE_MESSAGE_STMT.executeQuery();
+			String comb = Message.combineComponents(messageComponents);
+			SAVE_MESSAGE_STMT.setInt(1, sender.getID());
+			SAVE_MESSAGE_STMT.setString(2, comb);
+			ResultSet resultSet = SAVE_MESSAGE_STMT.executeQuery();
+			if (resultSet.next()) {
+				return new Message(chatbot, resultSet);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
-	public ResultSet saveMessage(String senderName, String message, String imageUrl, LocalDate date) {
+	public Message saveMessage(Message message) {
 		try {
 			checkConnection();
-			SAVE_MESSAGE_WITH_DATE_STMT.setString(1, senderName);
-			SAVE_MESSAGE_WITH_DATE_STMT.setString(2, message);
-			SAVE_MESSAGE_WITH_DATE_STMT.setString(3, imageUrl);
-			SAVE_MESSAGE_WITH_DATE_STMT.setDate(4, java.sql.Date.valueOf(date));
-			return SAVE_MESSAGE_WITH_DATE_STMT.executeQuery();
+			SAVE_MESSAGE_WITH_DATE_STMT.setInt(1, message.getSender().getID());
+			SAVE_MESSAGE_WITH_DATE_STMT.setDate(2, Date.valueOf(message.getDate()));
+			SAVE_MESSAGE_WITH_DATE_STMT.setString(3, message.combineComponents());
+			ResultSet resultSet = SAVE_MESSAGE_WITH_DATE_STMT.executeQuery();
+			if (resultSet.next()) {
+				return new Message(chatbot, resultSet);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			try {
-				System.out.println(connection.getMetaData());
-			} catch (SQLException e1) {
-				e1.printStackTrace();
-			}
 		}
 		return null;
 	}
 	//endregion
 
 	//region Images
-	public Image getImageFromID(int id) throws SSLHandshakeException {
+	public Image getImageFromID(int id) {
 		try {
 			checkConnection();
 			GET_IMAGE_FROM_ID_STMT.setInt(1, id);
 			ResultSet resultSet = GET_IMAGE_FROM_ID_STMT.executeQuery();
+			if (resultSet.next()) {
+				return new Image(resultSet);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public Image saveImage(String url) {
+		try {
+			checkConnection();
+			SAVE_IMAGE_STMT.setString(1, url);
+			ResultSet resultSet = SAVE_IMAGE_STMT.executeQuery();
 			if (resultSet.next()) {
 				return new Image(resultSet);
 			}
@@ -395,12 +366,4 @@ public class Database {
 			e.printStackTrace();
 		}
 	}
-
-	//region Getters & Setters
-
-	public Connection getConnection() {
-		return connection;
-	}
-
-	//endregion
 }

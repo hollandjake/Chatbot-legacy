@@ -1,7 +1,8 @@
-package bot.utils;
+package bot.core.utils;
 
-import bot.Chatbot;
-import bot.utils.message.Message;
+import bot.core.Chatbot;
+import bot.core.utils.message.Human;
+import bot.core.utils.message.Message;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -12,8 +13,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.util.HashMap;
 import java.util.List;
 
-import static bot.utils.CONSTANTS.REPOSITORY;
-import static bot.utils.XPATHS.*;
+import static bot.core.utils.CONSTANTS.REPOSITORY;
+import static bot.core.utils.XPATHS.*;
 
 public class WebController {
 	//region Variables
@@ -57,8 +58,8 @@ public class WebController {
 
 		Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
 			e.printStackTrace();
-			GithubController.createIssue(REPOSITORY, config, e);
 			screenshot();
+			GithubController.createIssue(REPOSITORY, config, e);
 			quit(false);
 		});
 	}
@@ -104,10 +105,11 @@ public class WebController {
 		int myMessageCount = getNumberOfMyMessagesDisplayed();
 		WebElement inputBox = selectInputBox();
 		if (config.containsKey("debug_messages")) {
-			message.sendDebugMessage(inputBox);
+			message.sendDebugMessage(inputBox, wait);
 		} else {
-			message.sendMessage(inputBox);
+			message.sendMessage(inputBox, wait);
 		}
+		chatbot.saveMessage(message);
 		//Wait for message to be sent
 		wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.xpath(MESSAGES_MINE),
 			myMessageCount));

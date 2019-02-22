@@ -1,4 +1,4 @@
-package bot.utils;
+package bot.core.utils;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.CookieSpecs;

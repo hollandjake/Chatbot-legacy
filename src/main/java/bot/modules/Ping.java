@@ -1,18 +1,21 @@
 package bot.modules;
 
-import bot.Chatbot;
-import bot.utils.CommandModule;
-import bot.utils.message.Message;
-import bot.utils.message.MessageComponent;
+import bot.core.Chatbot;
+import bot.core.utils.message.CommandMatch;
+import bot.core.utils.message.Message;
+import bot.core.utils.module.CommandModule;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import static bot.utils.CONSTANTS.ACTIONIFY;
-import static bot.utils.CONSTANTS.DEACTIONIFY;
+import static bot.core.utils.CONSTANTS.ACTIONIFY;
 
 public class Ping implements CommandModule {
 	//region Constants
 	private final String PING_REGEX = ACTIONIFY("ping");
+
+	//Put all regexes into a list
+	private final List<String> regexes = Collections.singletonList(PING_REGEX);
 	private final Chatbot chatbot;
 	//endregion
 
@@ -24,36 +27,18 @@ public class Ping implements CommandModule {
 	@Override
 	@SuppressWarnings("Duplicates")
 	public boolean process(Message message) {
-		String match = getMatch(message);
-		if (match.equals(PING_REGEX)) {
-			if (Math.random() < 0.3) {
-				chatbot.sendImageWithMessage("https://www.rightthisminute.com/sites/default/files/styles/twitter_card/public/videos/images/munchkin-teddy-bear-dog-ping-pong-video.jpg?itok=ajJWbxY6", "Pong! \uD83C\uDFD3");
-			} else {
+		CommandMatch match = CommandMatch.findMatch(regexes, message);
+		if (match != null) {
+			if (match.regexMatch(PING_REGEX)) {
 				chatbot.sendMessage("Pong! \uD83C\uDFD3");
 			}
 			return true;
-		} else {
-			return false;
 		}
+		return false;
+		//endregion
 	}
 
-	@Override
-	@SuppressWarnings("Duplicates")
-	public String getMatch(Message message) {
-		for (MessageComponent messageComponent : message.getMessageComponents()) {
-			if (messageComponent.matches(PING_REGEX)) {
-				return PING_REGEX;
-			}
-		}
-		return "";
+	public List<String> getRegexes() {
+		return regexes;
 	}
-
-	@Override
-	@SuppressWarnings("Duplicates")
-	public ArrayList<String> getCommands() {
-		ArrayList<String> commands = new ArrayList<>();
-		commands.add(DEACTIONIFY(PING_REGEX));
-		return commands;
-	}
-	//endregion
 }

@@ -1,4 +1,4 @@
-package bot.utils.exceptions;
+package bot.core.utils.exceptions;
 
 import java.util.Arrays;
 

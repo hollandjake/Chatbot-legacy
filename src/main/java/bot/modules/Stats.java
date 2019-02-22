@@ -1,21 +1,27 @@
 package bot.modules;
 
-import bot.Chatbot;
-import bot.utils.CommandModule;
-import bot.utils.message.Message;
+import bot.core.Chatbot;
+import bot.core.utils.message.CommandMatch;
+import bot.core.utils.message.Message;
+import bot.core.utils.module.CommandModule;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static bot.utils.CONSTANTS.*;
+import static bot.core.utils.CONSTANTS.ACTIONIFY;
+import static bot.core.utils.CONSTANTS.DATE_TIME_FORMATTER;
 
 public class Stats implements CommandModule {
 	//region Constants
 	private final String STATS_REGEX = ACTIONIFY("stats");
 	private final String UPTIME_REGEX = ACTIONIFY("uptime");
 	private final String PUPTIME_REGEX = ACTIONIFY("puptime");
+
+	//Put all regexes into a list
+	private final List<String> regexes = Arrays.asList(STATS_REGEX, UPTIME_REGEX, PUPTIME_REGEX);
 	private final Chatbot chatbot;
 	//endregion
 
@@ -48,48 +54,27 @@ public class Stats implements CommandModule {
 		return getMinifiedStats() + "\n" +
 			"\n" +
 			getUptime() + "\n" +
-			"Unique messages read this session: " + chatbot.getMessageCount();
+			"Number of messages stored: " + chatbot.getMessageCount();
 	}
 
 	//region Overrides
 	@Override
 	public boolean process(Message message) {
-		String match = getMatch(message);
-		if (match.equals(STATS_REGEX)) {
-			chatbot.sendMessage(getStats());
+		CommandMatch match = CommandMatch.findMatch(regexes, message);
+		if (match != null) {
+			if (match.regexMatch(STATS_REGEX)) {
+				chatbot.sendMessage(getStats());
+			} else if (match.regexMatch(UPTIME_REGEX, PUPTIME_REGEX)) {
+				chatbot.sendMessage(getUptime());
+			}
 			return true;
-		} else if (match.equals(UPTIME_REGEX) || match.equals(PUPTIME_REGEX)) {
-			chatbot.sendMessage(getUptime());
-			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	@Override
-	@SuppressWarnings("Duplicates")
-	public String getMatch(Message message) {
-		String messageBody = message.getMessage();
-		if (messageBody.matches(STATS_REGEX)) {
-			return STATS_REGEX;
-		} else if (messageBody.matches(UPTIME_REGEX)) {
-			return UPTIME_REGEX;
-		} else if (messageBody.matches(PUPTIME_REGEX)) {
-			return PUPTIME_REGEX;
-		} else {
-			return "";
-		}
+	public List<String> getRegexes() {
+		return regexes;
 	}
-
-	@Override
-	@SuppressWarnings("Duplicates")
-	public ArrayList<String> getCommands() {
-		ArrayList<String> commands = new ArrayList<>();
-		commands.add(DEACTIONIFY(STATS_REGEX));
-		commands.add(DEACTIONIFY(UPTIME_REGEX));
-		commands.add(DEACTIONIFY(PUPTIME_REGEX));
-		return commands;
-	}
-
 	//endregion
 }

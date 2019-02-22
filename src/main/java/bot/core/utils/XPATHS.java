@@ -1,4 +1,4 @@
-package bot.utils;
+package bot.core.utils;
 
 public interface XPATHS {
 	//region Login
@@ -25,24 +25,39 @@ public interface XPATHS {
 	//endregion
 
 	//region Messages
-	String MESSAGE_GROUPS = "//div[@id='js_1']/div";
-	String MESSAGES_ALL = MESSAGE_GROUPS + "/div/div/div[contains(@class,'_o46')]";
-	String STICKER_FILTER = MESSAGES_ALL + "[div/div[@aria-label] or div/div/div/div/img[@src]]";
-	String MESSAGES_OTHERS = STICKER_FILTER + "[contains(@class,'_29_7')]";
+	String MESSAGES_ALL = "//div[contains(@class,'_o46')]";
+	String MESSAGES_OTHERS = MESSAGES_ALL + "[contains(@class,'_29_7')]";
 	String MESSAGES_OTHERS_RECENT = "(" + MESSAGES_OTHERS + ")[last()]";
-	String MESSAGES_MINE = STICKER_FILTER + "[contains(@class,'_nd_')]";
-	String MESSAGES_MINE_RECENT = "(" + MESSAGES_MINE + ")[last()]";
+	String MESSAGES_MINE = MESSAGES_ALL + "[contains(@class,'_o46')]";
 
-	//    (//div[@id='js_1']/div/div/div/div[contains(@class,'_o46')][div/div[@aria-label] or div/div/div/div/img[@src]][contains(@class,'_nd_')]/div/div[@aria-label])[last()]/span/*
+	/*
+		(//div[contains(@class,'_o46')][contains(@class,'_29_7')])[last()]
+	 */
 
 	//region Requires MESSAGE ELEMENT
+
+	//region Sender
+	/**
+	 * REQUIRES <strong>MESSAGE ELEMENT</strong>
+	 * <br><br>RETURNS -> @<strong>href</strong>
+	 */
+	String MESSAGE_SENDER_URL = "./../../div/a[@href]";
+	/**
+	 * REQUIRES <strong>MESSAGE ELEMENT</strong>
+	 * <br><br>RETURNS -> @<strong>data-tooltip-content</strong>
+	 */
+	String MESSAGE_SENDER_NAME = MESSAGE_SENDER_URL + "/div[@data-tooltip-content]";
+	//endregion
+
 	/**
 	 * REQUIRES <strong>MESSAGE ELEMENT</strong>
 	 * <br><br>RETURNS -> @<strong>src</strong>
 	 */
 	String MESSAGE_IMAGE = "./div/div/div/div/img[@src]";
 	/**
-	 * REQUIRES <strong>MESSAGE ELEMENT</strong>
+	 * REQUIRES <strong>MESSAGE ELEMENT</strong><br><br>
+	 * This gives the entire text content as one string but can be subdivided by using {@link #MESSAGE_TEXT_COMPONENTS}
+	 * or {@link #MESSAGE_TEXT_TAGS}
 	 * <br><br>RETURNS -> @<strong>aria-label</strong>
 	 */
 	String MESSAGE_TEXT = "./div/div[@aria-label]";
@@ -56,16 +71,7 @@ public interface XPATHS {
 	 * <br><br>RETURNS -> @<strong>href</strong>
 	 */
 	String MESSAGE_TEXT_TAGS = "_ih-";
-	/**
-	 * REQUIRES <strong>MESSAGE ELEMENT</strong>
-	 * <br><br>RETURNS -> @<strong>aria-label</strong>
-	 */
-	String MESSAGE_SENDER_NICKNAME = "./../h5[@aria-label]";
-	/**
-	 * REQUIRES <strong>MESSAGE ELEMENT</strong>
-	 * <br><br>RETURNS -> @<strong>data-tooltip-content</strong>
-	 */
-	String MESSAGE_SENDER_REAL_NAME = "./../../div/*/div[@data-tooltip-content]";
+
 	//endregion
 
 	//region Anti-facebook protection

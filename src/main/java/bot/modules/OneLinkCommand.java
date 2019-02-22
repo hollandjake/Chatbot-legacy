@@ -1,18 +1,20 @@
 package bot.modules;
 
-import bot.Chatbot;
-import bot.utils.CONSTANTS;
-import bot.utils.CommandModule;
-import bot.utils.message.Message;
-import bot.utils.message.MessageComponent;
+import bot.core.Chatbot;
+import bot.core.utils.CONSTANTS;
+import bot.core.utils.message.CommandMatch;
+import bot.core.utils.message.Message;
+import bot.core.utils.module.CommandModule;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class OneLinkCommand implements CommandModule {
 	//region Constants
-	private final List<String> COMMAND_REGEXES;
+
+	//Put all regexes into a list
+	private final List<String> regexes;
+
 	private final String url;
 	private final String message;
 	private final Chatbot chatbot;
@@ -20,7 +22,7 @@ public class OneLinkCommand implements CommandModule {
 
 	public OneLinkCommand(Chatbot chatbot, List<String> commands, String link, String message) {
 		this.chatbot = chatbot;
-		this.COMMAND_REGEXES = commands.stream().map(CONSTANTS::ACTIONIFY).collect(Collectors.toList());
+		this.regexes = commands.stream().map(CONSTANTS::ACTIONIFY).collect(Collectors.toList());
 		this.url = link;
 		this.message = message;
 	}
@@ -29,33 +31,17 @@ public class OneLinkCommand implements CommandModule {
 	@Override
 	@SuppressWarnings("Duplicates")
 	public boolean process(Message message) {
-		String match = getMatch(message);
-		for (String command : COMMAND_REGEXES) {
-			if (match.equals(command)) {
-				chatbot.sendMessage(this.message + ":\n" + url);
-				return true;
-			}
+		CommandMatch match = CommandMatch.findMatch(regexes, message);
+		if (match != null) {
+			chatbot.sendMessage(this.message + ":\n" + url);
+			return true;
 		}
 		return false;
 	}
 
 	@Override
-	@SuppressWarnings("Duplicates")
-	public String getMatch(Message message) {
-		for (MessageComponent messageComponent : message.getMessageComponents()) {
-			for (String command : COMMAND_REGEXES) {
-				if (messageComponent.matches(command)) {
-					return command;
-				}
-			}
-		}
-		return "";
-	}
-
-	@Override
-	@SuppressWarnings("Duplicates")
-	public ArrayList<String> getCommands() {
-		return (ArrayList<String>) COMMAND_REGEXES.stream().map(CONSTANTS::DEACTIONIFY).collect(Collectors.toList());
+	public List<String> getRegexes() {
+		return regexes;
 	}
 	//endregion
 }

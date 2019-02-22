@@ -1,6 +1,7 @@
-package bot.utils.message;
+package bot.core.utils.message;
 
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public interface MessageComponent {
 
 	boolean matches(Object obj);
 
-	void send(WebElement inputBox);
+	void send(WebElement inputBox, WebDriverWait wait);
 
 	String combine();
 }
