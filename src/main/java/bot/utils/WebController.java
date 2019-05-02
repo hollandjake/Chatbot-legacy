@@ -45,7 +45,7 @@ public class WebController {
         } else if (config.containsKey("maximised")) {
             chromeOptions.addArguments("start-maximized");
         }
-        webDriver = new ChromeDriver();
+		webDriver = new ChromeDriver(chromeOptions);
         keyboard = new Actions(webDriver);
         //endregion
 
