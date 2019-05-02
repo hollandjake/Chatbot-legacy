@@ -40,13 +40,17 @@ public class Human implements MessageComponent {
 	}
 
 	public static Human getSender(Chatbot chatbot, WebElement webElement) {
-		String senderURL = webElement.findElement(By.xpath(MESSAGE_SENDER_URL)).getAttribute("href").replace("https://www.messenger.com/t/", "");
-		Human sender = chatbot.getHumanFromUrl(senderURL);
-		if (sender == null) {
-			String senderName = webElement.findElement(By.xpath(MESSAGE_SENDER_NAME)).getAttribute("data-tooltip-content");
-			sender = chatbot.saveHuman(new Human(senderName, senderURL));
+		try {
+			String senderURL = webElement.findElement(By.xpath(MESSAGE_SENDER_URL)).getAttribute("href").replace("https://www.messenger.com/t/", "");
+			Human sender = chatbot.getHumanFromUrl(senderURL);
+			if (sender == null) {
+				String senderName = webElement.findElement(By.xpath(MESSAGE_SENDER_NAME)).getAttribute("data-tooltip-content");
+				sender = chatbot.saveHuman(new Human(senderName, senderURL));
+			}
+			return sender;
+		} catch (NoSuchElementException e) {
+			return null;
 		}
-		return sender;
 	}
 
 	public static Human fromTag(Chatbot chatbot, WebElement webElement) {

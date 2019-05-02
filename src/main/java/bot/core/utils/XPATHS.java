@@ -26,12 +26,12 @@ public interface XPATHS {
 
 	//region Messages
 	String MESSAGES_ALL = "//div[contains(@class,'_o46')]";
-	String MESSAGES_OTHERS = MESSAGES_ALL + "[contains(@class,'_29_7')]";
+	String MESSAGES_OTHERS = MESSAGES_ALL + "[contains(@class,'_29_7')][./../../div/a[@href]]";
 	String MESSAGES_OTHERS_RECENT = "(" + MESSAGES_OTHERS + ")[last()]";
 	String MESSAGES_MINE = MESSAGES_ALL + "[contains(@class,'_o46')]";
 
 	/*
-		(//div[contains(@class,'_o46')][contains(@class,'_29_7')])[last()]
+		(//div[contains(@class,'_o46')][contains(@class,'_29_7')])[last()]/div/div[@aria-label]/span
 	 */
 
 	//region Requires MESSAGE ELEMENT
@@ -63,9 +63,13 @@ public interface XPATHS {
 	String MESSAGE_TEXT = "./div/div[@aria-label]";
 	/**
 	 * REQUIRES <strong>MESSAGE TEXT</strong>
-	 * <br><br>RETURNS -> @<strong>href</strong>
 	 */
 	String MESSAGE_TEXT_COMPONENTS = "./span/*";
+	/**
+	 * REQUIRES <strong>MESSAGE TEXT</strong>
+	 * <br><br>RETURNS -> @<strong>aria-label</strong>
+	 */
+	String MESSAGE_EMOJI = "./div/img[@aria-label]";
 	/**
 	 * REQUIRES <strong>MESSAGE TEXT COMPONENT</strong>
 	 * <br><br>RETURNS -> @<strong>href</strong>

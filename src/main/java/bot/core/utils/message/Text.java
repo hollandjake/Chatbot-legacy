@@ -24,6 +24,16 @@ public class Text implements MessageComponent {
 		this.text = text;
 	}
 
+	public Text(WebElement webElement) {
+		if (webElement.getTagName().equals("span")) {
+			this.text = webElement.getAttribute("innerHTML").replaceAll("<img alt=\"(.)\" .+?>", "$1");
+		} else if (webElement.getTagName().equals("div")) {
+			this.text = webElement.getAttribute("aria-label");
+		} else {
+			this.text = webElement.getText();
+		}
+	}
+
 	public static List<MessageComponent> fromElement(Chatbot chatbot, WebElement webElement) {
 		List<WebElement> text = webElement.findElements(By.xpath(MESSAGE_TEXT));
 		List<MessageComponent> textComponents = new ArrayList<>();
@@ -39,15 +49,15 @@ public class Text implements MessageComponent {
 					if (tag != null) {
 						textComponents.add(tag);
 					} else {
-						textComponents.add(new Text(textElement.getText()));
+						textComponents.add(new Text(textElement.getText() + " "));
 					}
 				} else {
 					//Element is a text element
-					textComponents.add(new Text(textElement.getText()));
+					textComponents.add(new Text(textElement));
 				}
 			}
 			if (textElements.isEmpty()) {
-				textComponents.add(new Text(textHolder.getText()));
+				textComponents.add(new Text(textHolder));
 			}
 			return textComponents;
 		}

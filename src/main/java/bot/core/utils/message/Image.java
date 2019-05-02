@@ -1,7 +1,8 @@
 package bot.core.utils.message;
 
 import bot.core.Chatbot;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import javax.imageio.ImageIO;
@@ -156,7 +157,7 @@ public class Image implements MessageComponent, Transferable {
 	@Override
 	public void send(WebElement inputBox, WebDriverWait wait) {
 		CLIPBOARD.setContents(this, null);
-		inputBox.sendKeys(PASTE + Keys.ENTER);
+		inputBox.sendKeys(PASTE);
 	}
 
 	@Override

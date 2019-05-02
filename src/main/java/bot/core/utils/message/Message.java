@@ -50,9 +50,13 @@ public class Message {
 		Human sender = Human.getSender(chatbot, webElement);
 
 		List<MessageComponent> messageComponents = new ArrayList<>();
-		messageComponents.addAll(Image.fromElement(chatbot, webElement));
-		messageComponents.addAll(Text.fromElement(chatbot, webElement));
-		return chatbot.getDb().saveMessage(sender, messageComponents);
+		if (sender != null) {
+			messageComponents.addAll(Image.fromElement(chatbot, webElement));
+			messageComponents.addAll(Text.fromElement(chatbot, webElement));
+			return chatbot.getDb().saveMessage(sender, messageComponents);
+		} else {
+			return null;
+		}
 	}
 	//endregion
 
@@ -66,7 +70,7 @@ public class Message {
 				continue;
 			}
 			Character firstChar = component.charAt(0);
-			if (firstChar == TAG_SYMBOL) {
+			if (firstChar.equals(TAG_SYMBOL)) {
 				//Component is a tag
 				Human human = db.getHumanFromID(Integer.parseInt(component.substring(1)));
 				if (!human.matches(chatbot.getMe())) {
@@ -74,7 +78,7 @@ public class Message {
 				} else {
 					messageComponents.add(new Text("@" + human.getName()));
 				}
-			} else if (firstChar == IMAGE_SYMBOL) {
+			} else if (firstChar.equals(IMAGE_SYMBOL)) {
 				//Component is an image
 				//is it a number if so probably the database index
 				Image image = db.getImageFromID(Integer.parseInt(component.substring(1)));
