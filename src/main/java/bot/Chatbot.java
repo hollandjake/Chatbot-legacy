@@ -12,16 +12,11 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Chatbot {
     //region Constants
@@ -158,11 +153,11 @@ public class Chatbot {
         modules.put("Stats", new Stats(this));
         modules.put("Ping", new Ping(this));
         modules.put("Github", new OneLinkCommand(this,
-                List.of("github", "repo"),
+			Arrays.asList("github", "repo"),
                 "https://github.com/hollandjake/Chatbot",
                 "Github repository"));
         modules.put("Commands", new OneLinkCommand(this,
-                List.of("commands", "help"),
+			Arrays.asList("commands", "help"),
                 "https://github.com/hollandjake/Chatbot/blob/master/README.md",
                 "A list of commands can be found at"));
     }
