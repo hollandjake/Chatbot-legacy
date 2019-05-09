@@ -172,6 +172,7 @@ public class WebController {
 		webDriver.findElement(By.xpath(SETTINGS_DROPDOWN)).click();
 		wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(MY_REAL_NAME)));
 		String name = webDriver.findElement(By.xpath(MY_REAL_NAME)).getText();
+		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(SETTINGS_DONE)));
 		webDriver.findElement(By.xpath(SETTINGS_DONE)).click();
 		return name;
 	}
