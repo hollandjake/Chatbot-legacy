@@ -17,7 +17,7 @@ public interface XPATHS {
 
     String SETTINGS_COG = "//a[contains(@class,'_2fug')]";
     String SETTINGS_DROPDOWN = "//span[text()='Settings']";
-    String SETTINGS_DONE = "//button[@class='_3quh _30yy _2t_ _5ixy']";
+	String SETTINGS_DONE = "//button[contains(@class,'_3quh _30yy _2t_ _5ixy')]";
     /**
      * <br><br>RETURNS -> .<strong>text</strong>
      */
